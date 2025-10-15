@@ -50,7 +50,7 @@ class BarangController extends Controller
         'harga_beli' => $request->harga_beli ?? 0,
         'harga_jual' => $request->harga_jual,
         'sku' => $sku,
-        'is_active' => $request->has('is_active'),
+        'is_active' => 1,
     ]);
 
     return redirect()->route('barang.index')->with('success', 'Barang berhasil ditambahkan!');

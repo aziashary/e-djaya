@@ -69,6 +69,7 @@
   border-color: #af3f3f !important;
   color: #fff !important;
   font-weight: 600;
+  width: 100%;
 }
 .btn-pay:hover { background-color: #922e2e !important; border-color: #922e2e !important; }
 
@@ -167,8 +168,11 @@
                     $catIcons = [
                       'kopi' => 'bx bx-coffee',
                       'teh' => 'bx bx-leaf',
-                      'snack' => 'bx bx-cookie',
-                      'default' => 'bx bx-box',
+                      'susu' => 'bx bx-cup',
+                      'pisang' => 'bx bx-banana',
+                      'roti' => 'bx bx-baguette',
+                      'dimsum' => 'bx bx-food-menu',
+                      'mie' => 'bx bx-noodles',
                     ];
                     $catIcon = $catIcons[strtolower($kategori)] ?? $catIcons['default'];
                     $badgeCount = $items->count();
@@ -549,7 +553,7 @@ function submitTransaction(isPrint) {
   }
 
   // send ajax
-  $.ajax({
+    $.ajax({
     url: "{{ route('pos.transaksi.store') }}",
     method: 'POST',
     data: {
@@ -562,29 +566,27 @@ function submitTransaction(isPrint) {
       items: payload.items
     },
     success: function(res) {
-      if (res.success) {
-        // success UX: close modal, clear cart, show toast
+      if (res.success && res.kode_transaksi) {
+        // kosongkan keranjang & tutup modal
         $('#modalBayar').modal('hide');
         cart = [];
         renderCart();
 
-        // optional: if isPrint, open print window (you need implement route)
-        if (isPrint && res.kode_transaksi) {
-            window.open("{{ url('/pos/print') }}/" + res.kode_transaksi, "_blank", "width=400,height=600");
-          }
+        // buka tab baru untuk print (manual)
+        window.open("{{ url('/pos/print') }}/" + res.kode_transaksi, "_blank");
 
-
-        // lightweight success feedback
-        alert('Transaksi tersimpan. Kode: ' + res.kode_transaksi);
+        // redirect ke halaman sukses
+        window.location.href = "{{ url('/pos/sukses') }}/" + res.kode_transaksi;
       } else {
-        alert('Gagal menyimpan transaksi: ' + (res.message || 'unknown'));
+        alert('Gagal menyimpan transaksi.');
       }
     },
     error: function(xhr) {
       console.error(xhr);
-      alert('Terjadi error saat menyimpan transaksi');
+      alert('Terjadi error saat menyimpan transaksi.');
     }
   });
+
 }
 
 /* Rayab doang (simpan tanpa print) */

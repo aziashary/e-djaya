@@ -32,31 +32,34 @@
   </head>
 
   <body>
-    <div class="layout-wrapper layout-content-navbar">
+    <!-- Layout wrapper -->
+    <div class="layout-wrapper layout-content-navbar layout-without-menu">
       <div class="layout-container">
-        
-        {{-- Sidebar --}}
-        @include('layouts.partials.sidebar')
 
-        <!-- Layout container -->
+        <!-- Layout page -->
         <div class="layout-page">
 
-          <!-- Breadcrumb -->
-          @include('layouts.partials.breadcrumb')
+          <!-- Navbar -->
+          @include('layouts.partials.navbar') {{-- pakai navbar custom kamu --}}
+          <!-- / Navbar -->
 
           <!-- Content wrapper -->
-          <div class="content-wrapper p-4">
-            @yield('content')
+          <div class="content-wrapper">
+            <div class="container-xxl flex-grow-1 container-p-y">
+              @yield('content')
+            </div>
+
+            <!-- Footer -->
+            @includeWhen(View::exists('layouts.partials.footer'), 'layouts.partials.footer')
           </div>
           <!-- / Content wrapper -->
-          <!-- Footer  -->
-          @include('layouts.partials.footer')
-          <!-- / footer -->
+
         </div>
         <!-- / Layout page -->
       </div>
       <!-- / Layout container -->
     </div>
+    <!-- / Layout wrapper -->
 
     <!-- Core JS -->
     <script src="{{ asset('assets/vendor/libs/jquery/jquery.js') }}"></script>
@@ -69,4 +72,5 @@
 
     @stack('scripts')
   </body>
+  
 </html>

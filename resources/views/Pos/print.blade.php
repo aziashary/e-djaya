@@ -3,62 +3,80 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Struk {{ $transaksi->kode_transaksi }}</title>
+  <title>Print Struk {{ $transaksi->kode_transaksi }}</title>
   <style>
-    @page { size: 58mm auto; margin: 0; }
     body {
-      font-family: 'Courier New', monospace;
+      font-family: "Courier New", monospace;
       font-size: 12px;
       margin: 0;
       padding: 10px;
+      color: #000;
+      background: #fff;
     }
-    .center { text-align: center; }
-    .bold { font-weight: bold; }
-    .line { border-top: 1px dashed #000; margin: 5px 0; }
-    .total { font-size: 14px; font-weight: bold; }
-    .right { text-align: right; }
-    table { width: 100%; border-collapse: collapse; }
-    td { vertical-align: top; }
   </style>
 </head>
-<body onload="window.print(); window.close();">
+<body>
+<script>
+(function() {
+  const ESC = '\x1B';
+  const GS  = '\x1D';
 
-  <div class="center bold">Warkop Djaya 590</div>
-  <div class="center">Jl. Raya Puncak No. 590</div>
+  const center     = ESC + 'a' + '\x01';
+  const left       = ESC + 'a' + '\x00';
+  const boldOn     = ESC + 'E' + '\x01';
+  const boldOff    = ESC + 'E' + '\x00';
+  const doubleSize = ESC + '!' + '\x20';
+  const normalSize = ESC + '!' + '\x00';
+  const cutFull    = GS  + 'V' + '\x00'; // auto-cut full
 
-  <div class="line"></div>
-  <div>Kode: {{ $transaksi->kode_transaksi }}</div>
-  <div>Tanggal: {{ $transaksi->tanggal->format('d/m/Y H:i') }}</div>
-  <div>Kasir: {{ $transaksi->kasir->name ?? '-' }}</div>
+  // Helper buat rata kanan subtotal
+  function padRight(leftText, rightText, width = 48) {
+    const totalLength = leftText.length + rightText.length;
+    if (totalLength >= width) return leftText + rightText;
+    const spaces = ' '.repeat(width - totalLength);
+    return leftText + spaces + rightText;
+  }
 
-  <div class="line"></div>
+  let struk = '';
 
-  <table>
-    @foreach($transaksi->items as $item)
-    <tr>
-      <td colspan="2">{{ $item->nama }}</td>
-    </tr>
-    <tr>
-      <td>{{ $item->qty }} x {{ number_format($item->harga) }}</td>
-      <td class="right">{{ number_format($item->subtotal) }}</td>
-    </tr>
-    @endforeach
-  </table>
+  // HEADER
+  struk += center + boldOn + doubleSize + 'Warkop Djaya 590\n' + boldOff + normalSize;
+  struk += center + 'Jln Raya Puncak No. 590\n';
+  struk += left +'------------------------------------------------\n';
 
-  <div class="line"></div>
-  <table>
-    <tr><td>Subtotal</td><td class="right">{{ number_format($transaksi->subtotal) }}</td></tr>
-    {{-- <tr><td>Diskon</td><td class="right">{{ $transaksi->diskon }}%</td></tr> --}}
-    <tr class="bold total"><td>Total</td><td class="right">{{ number_format($transaksi->total) }}</td></tr>
-    @if($transaksi->metode_pembayaran == 'cash')
-      <tr><td>Cash</td><td class="right">✔</td></tr>
-    @else
-      <tr><td>QRIS</td><td class="right">✔</td></tr>
-    @endif
-  </table>
+  // INFO TRANSAKSI
+  struk += left + `Kode   : {{ $transaksi->kode_transaksi }}\n`;
+  struk += `Tanggal: {{ $transaksi->tanggal->format('d/m/Y H:i') }}\n`;
+  struk += `Kasir  : {{ $transaksi->kasir->name ?? '-' }}\n`;
+  struk += '------------------------------------------------\n';
 
-  <div class="line"></div>
-  <div class="center">Terima kasih 🙏</div>
-  <div class="center">Djaya!</div>
+  // ITEMS (daftar belanja)
+  @foreach($transaksi->items as $item)
+    struk += `{{ $item->nama }}\n`;
+    struk += padRight('{{ $item->qty }}  x  {{ number_format($item->harga, 0, ',', '.') }}', '{{ number_format($item->subtotal, 0, ',', '.') }}') + '\n';
+  @endforeach
+
+  struk += '------------------------------------------------\n';
+
+  // TOTAL
+  struk += boldOn + padRight('TOTAL', 'Rp {{ number_format($transaksi->total, 0, ',', '.') }}') + '\n' + boldOff;
+  struk += padRight('Metode', '{{ strtoupper($transaksi->metode_pembayaran) }}') + '\n';
+  struk += '------------------------------------------------\n';
+  struk += center + 'Terima kasih 🙏\n';
+  struk += center + '\n\n';
+  struk += center + 'Djaya!\n';
+  struk += left +'------------------------------------------------\n';
+
+  // AUTO CUT
+  struk += cutFull;
+
+  // Kirim ke RawBT (langsung cetak)
+  const encoded = encodeURIComponent(struk);
+  window.location.href = "rawbt:" + encoded;
+
+  // Tutup otomatis biar clean
+  setTimeout(() => window.close(), 2000);
+})();
+</script>
 </body>
 </html>

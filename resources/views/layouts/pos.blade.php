@@ -23,18 +23,56 @@
         display: flex;
         flex-direction: column;
         position: relative;
-        padding: 1.5rem;
+        padding: 0.2rem;
       }
+
+            /* ====== Header Actions ====== */
+      .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+      }
+
+      .action-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        background: #f7f8fa;
+        color: #555;
+        font-size: 1.3rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: none;
+      }
+
+      .action-btn:hover {
+        background: #007bff;
+        color: #fff;
+        transform: scale(1.05);
+      }
+
+      .logout-btn {
+        color: #ff4d4f !important;
+      }
+
+      .logout-btn:hover {
+        background: #ff4d4f !important;
+        color: #fff !important;
+      }
+
 
       /* Header POS */
       .pos-header {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        margin-bottom: 1.5rem;
         background: #fff;
         border-radius: 12px;
-        padding: 1rem 1.5rem;
+         padding: 0.5rem 1rem;      /* lebih tipis */
+        margin-bottom: 1rem;       /* jarak bawah dikit aja */
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
       }
 
@@ -45,8 +83,8 @@
       }
 
       .pos-header img {
-        width: 90px;
-        height: 45px;
+        width: 65px;               /* logo mengecil */
+        height: 32px;
         border-radius: 8px;
       }
 
@@ -86,6 +124,9 @@
   </head>
 
   <body>
+    {{-- <div class="logout-btn" id="logoutBtn" title="Logout">
+          <i class="bx bx-log-out"></i>
+    </div> --}}
     <div class="pos-wrapper">
       <!-- Header POS -->
       <div class="pos-header">
@@ -97,10 +138,24 @@
           </div>
         </div>
 
-        <div class="logout-btn" id="logoutBtn" title="Logout">
-          <i class="bx bx-log-out"></i>
+        <div class="header-actions">
+          <!-- Tombol Riwayat Transaksi -->
+          <a href="" class="action-btn" title="Riwayat Transaksi">
+            <i class="bx bx-history"></i>
+          </a>
+
+          <!-- Tombol Fullscreen -->
+          <button id="fullscreenBtn" class="action-btn" title="Fullscreen">
+            <i class="bx bx-fullscreen"></i>
+          </button>
+
+          <!-- Tombol Logout -->
+          <div class="logout-btn action-btn" id="logoutBtn" title="Logout">
+            <i class="bx bx-log-out"></i>
+          </div>
         </div>
       </div>
+    
 
       <!-- Modal Konfirmasi Logout -->
       <div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
@@ -115,12 +170,12 @@
             </div>
             <div class="modal-footer justify-content-center">
               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                <i class="bx bx-x"></i> Kela
+                <i class="bx bx-x"></i> Kedengan
               </button>
               <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-inline">
                 @csrf
                 <button type="submit" class="btn btn-danger">
-                  <i class="bx bx-log-out"></i> Heuh
+                  <i class="bx bx-log-out"></i> Iya
                 </button>
               </form>
             </div>
@@ -146,6 +201,19 @@
         const modal = new bootstrap.Modal(document.getElementById('logoutModal'));
         modal.show();
       });
+
+        // Toggle fullscreen
+        const fullscreenBtn = document.getElementById('fullscreenBtn');
+        fullscreenBtn.addEventListener('click', () => {
+          if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen();
+            fullscreenBtn.innerHTML = '<i class="bx bx-exit-fullscreen"></i>';
+          } else {
+            document.exitFullscreen();
+            fullscreenBtn.innerHTML = '<i class="bx bx-fullscreen"></i>';
+          }
+        });
+
     </script>
   </body>
 </html>

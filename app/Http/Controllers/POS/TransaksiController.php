@@ -60,6 +60,16 @@ class TransaksiController extends Controller
         }
     }
 
+        public function sukses($kode)
+    {
+        $transaksi = \App\Models\Transaksi::with('items', 'kasir')
+            ->where('kode_transaksi', $kode)
+            ->firstOrFail();
+
+        return view('pos.sukses', compact('transaksi'));
+    }
+
+
     public function print($kode)
     {
         $transaksi = \App\Models\Transaksi::with('items', 'kasir')->where('kode_transaksi', $kode)->firstOrFail();

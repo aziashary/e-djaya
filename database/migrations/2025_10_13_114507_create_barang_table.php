@@ -16,6 +16,7 @@ return new class extends Migration
             $table->decimal('harga_beli', 15, 2)->default(0);
             $table->decimal('harga_jual', 15, 2);
             $table->boolean('is_active')->default(true);
+            $table->softDeletes();
             $table->timestamps();
         });
     }

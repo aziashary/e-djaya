@@ -47,6 +47,11 @@ Route::middleware(['auth'])
 
         // print struk
         Route::get('/print/{kode}', [TransaksiController::class, 'print'])->name('print');
+
+        // halaman sukses
+        Route::get('/sukses/{kode}', [App\Http\Controllers\POS\TransaksiController::class, 'sukses'])
+        ->name('sukses');
+
     });
 
     
