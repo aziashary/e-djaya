@@ -68,55 +68,59 @@ Data Barang
 
       <!-- Table -->
       <div class="table-responsive">
-        <table class="table table-striped align-middle" id="tableBarang">
-          <thead class="table-light">
-            <tr>
-              <th>No</th>
-              <th>Nama</th>
-              <th>Kategori</th>
-              <th>Status</th>
-              <th width="150px">Aksi</th>
-            </tr>
-          </thead>
-          <tbody>
-            @php $no = 1; @endphp
-            @foreach($barang as $b)
-              <tr>
-                <td>{{ $no++ }}</td>
-                <td>{{ $b->nama }}</td>
-                <td>{{ $b->category->nama ?? '-' }}</td>
-                <td>
+        <div class="table-responsive">
+          <table class="table table-striped align-middle w-100" id="tableBarang">
+            <thead class="table-dark">
+              <tr class="text-center">
+                <th>No</th>
+                <th>Nama</th>
+                <th>Kategori</th>
+                <th>Status</th>
+                <th width="150px">Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              @php $no = 1; @endphp
+              @foreach($barang as $b)
+                <tr>
+                  <td class="text-center">{{ $no++ }}</td>
+                  <td>{{ $b->nama }}</td>
+                  <td>{{ $b->category->nama ?? '-' }}</td>
+                  <td class="text-center">
                     @if($b->is_active)
                       <span class="badge bg-success">Aktif</span>
                     @else
                       <span class="badge bg-danger">Nonaktif</span>
                     @endif
                   </td>
-                  <td>
+                  <td class="text-center">
                     <a href="{{ route('barang.edit', $b->id) }}" 
                       class="btn btn-sm btn-warning me-1" 
                       title="Edit">
-                     <i class="bx bx-edit"></i>
-                   </a>
-                   
-                   <form action="{{ route('barang.destroy', $b->id) }}" 
-                         method="POST" 
-                         class="d-inline">
-                     @csrf
-                     @method('DELETE')
-                     <button type="submit" 
-                             class="btn btn-sm btn-danger" 
-                             title="Hapus" 
-                             onclick="return confirm('Yakin hapus kategori ini?')">
-                       <i class="bx bx-trash"></i>
-                     </button>
-                   </form>                 
-                    </form>
+                      <i class="bx bx-edit"></i>
+                    </a>
+
+                    <form action="{{ route('barang.destroy', $b->id) }}" 
+                          method="POST" 
+                          class="d-inline">
+                      @csrf
+                      @method('DELETE')
+                      <button type="submit" 
+                              class="btn btn-sm btn-danger" 
+                              title="Hapus" 
+                              onclick="return confirm('Yakin hapus barang ini?')">
+                        <i class="bx bx-trash"></i>
+                      </button>
+                    </form>                 
                   </td>
-              </tr>
-            @endforeach
-          </tbody>
-        </table>
+                </tr>
+              @endforeach
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+
       </div>
 
       <!-- Pagination -->
@@ -128,28 +132,34 @@ Data Barang
 </div>
 @endsection
 
-@push('js')
-<script src="{{ asset('assets/extensions/simple-datatables/umd/simple-datatables.js') }}"></script>
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const dataTable = new simpleDatatables.DataTable("#tableBarang", {
-      searchable: true,
-      fixedHeight: true,
-      perPageSelect: [5, 10, 25, 50],
-      perPage: 10,
-      labels: {
-        placeholder: "Cari...",
-        perPage: "Data per halaman",
-        noRows: "Tidak ada data ditemukan",
-        info: "Menampilkan {start}–{end} dari {rows} data"
-      },
-    });
+@push('styles')
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+@endpush
 
-    // Custom search bar (external input)
-    const searchInput = document.querySelector("#searchBar");
-    searchInput.addEventListener("input", (e) => {
-      dataTable.search(e.target.value);
-    });
+@push('scripts')
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  $('#tableBarang').DataTable({
+    pageLength: 10,
+    responsive: true,
+    ordering: true,
+    info: false, // hilangkan “Menampilkan 1–x dari y data”
+    language: {
+      search: "Cari:",
+      lengthMenu: "Tampilkan _MENU_ data",
+      paginate: { previous: "Sebelumnya", next: "Berikutnya" },
+      zeroRecords: "Tidak ada data ditemukan"
+    },
+    columnDefs: [
+      { orderable: false, targets: [4] }, // kolom aksi tidak bisa di-sort
+      { className: "text-center", targets: [0, 3, 4] }
+    ]
   });
+});
 </script>
 @endpush
+

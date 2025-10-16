@@ -112,8 +112,7 @@
     {{-- LEFT: Search + Tabs + Accordion --}}
     <div class="pos-left">
       <div class="d-flex align-items-center justify-content-between mb-3">
-        {{-- <h5 class="fw-bold mb-0">Daftar Produk</h5>
-        <div class="ms-2 d-none d-sm-block text-muted">Total kategori: {{ count($data) }}</div> --}}
+         <h5 class="fw-bold mb-0">💰Kasier e-Warkop Djaya</h5>
       </div>
 
       {{-- Search --}}
@@ -274,7 +273,19 @@
 
         <form id="formPembayaran" autocomplete="off">
           <div class="row g-3">
-            <div class="col-md-6">
+            <div class="col-md-3">
+              <label for="nama_customer" class="form-label fw-semibold">Nama Cust</label>
+              <input type="text" class="form-control" id="nama_customer">
+            </div>
+
+            <div class="col-md-9">
+              <label for="catatan" class="form-label fw-semibold">Catatan</label>
+              <input type="text" class="form-control" id="catatan">
+            </div>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-md-6"> 
               <label for="diskon" class="form-label fw-semibold">Diskon (%)</label>
               <input type="number" class="form-control" id="diskon" value="0" min="0" max="100" step="0.1">
             </div>
@@ -306,9 +317,9 @@
       <div class="modal-footer d-flex justify-content-between align-items-center flex-wrap">
         <div class="d-flex gap-2">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="bx bx-x"></i> Batal</button>
-          <button type="button" class="btn text-white" id="btn-rayab" style="background-color:#af3f3f; border-color:#af3f3f;">
+          {{-- <button type="button" class="btn text-white" id="btn-rayab" style="background-color:#af3f3f; border-color:#af3f3f;">
             <i class="bx bx-receipt"></i> Rayab doang
-          </button>
+          </button> --}}
         </div>
 
         <div>
@@ -523,7 +534,9 @@ function buildPayload() {
   const diskonPerc = parseFloat($('#diskon').val()) || 0;
   const total = subtotal - (subtotal * diskonPerc / 100);
   const metode = $('#metode').val();
-  const catatan = ''; // extendable
+  const nama_customer = $('#nama_customer').val();
+  const catatan = $('#catatan').val()?.trim() || '';
+
   const items = cart.map(it => ({
     barang_id: it.id,
     nama: it.nama,
@@ -532,7 +545,7 @@ function buildPayload() {
     subtotal: it.harga * it.qty
   }));
 
-  return { subtotal, diskon: diskonPerc, total, metode_pembayaran: metode, catatan, items };
+  return { subtotal, diskon: diskonPerc, total, metode_pembayaran: metode, nama_customer, catatan, items };
 }
 
 /* common AJAX POST */
@@ -562,6 +575,7 @@ function submitTransaction(isPrint) {
       diskon: payload.diskon,
       total: payload.total,
       metode_pembayaran: payload.metode_pembayaran,
+      nama_customer: payload.nama_customer,
       catatan: payload.catatan,
       items: payload.items
     },

@@ -19,6 +19,7 @@ class Transaksi extends Model
         'diskon',
         'total',
         'metode_pembayaran',
+        'nama_customer',
         'catatan',
         'status',
     ];
@@ -39,13 +40,13 @@ class Transaksi extends Model
     }
 
     public function kasir()
-    {
-        return $this->belongsTo(User::class, 'kasir_id');
-    }
+{
+    return $this->belongsTo(User::class, 'kasir_id', 'id');
+}
 
     public function items()
     {
-        return $this->hasMany(TransaksiItem::class, 'transaksi_id');
+        return $this->hasMany(TransaksiItem::class, 'transaksi_id', 'id');
     }
 }
 

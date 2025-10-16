@@ -19,6 +19,7 @@ class TransaksiController extends Controller
             'total' => 'required|numeric',
             'metode_pembayaran' => 'required|in:cash,qris',
             'catatan' => 'nullable|string',
+            'nama_customer' => 'nullable|string',
             'items' => 'required|array|min:1',
             'items.*.barang_id' => 'nullable|integer',
             'items.*.nama' => 'required|string',
@@ -36,6 +37,7 @@ class TransaksiController extends Controller
                 'diskon' => $data['diskon'] ?? 0,
                 'total' => $data['total'],
                 'metode_pembayaran' => $data['metode_pembayaran'],
+                'nama_customer' => $data['nama_customer'] ?? null,
                 'catatan' => $data['catatan'] ?? null,
                 'status' => 'selesai',
             ]);
@@ -76,5 +78,66 @@ class TransaksiController extends Controller
 
         return view('pos.print', compact('transaksi'));
     }
+
+    public function riwayat(Request $request)
+{
+    $end = $request->end_date ? \Carbon\Carbon::parse($request->end_date) : now();
+    $start = $request->start_date ? \Carbon\Carbon::parse($request->start_date) : now()->subDays(7);
+
+    if ($start->diffInMonths($end) > 2) {
+        $start = $end->copy()->subMonths(2);
+    }
+
+    $transaksi = \App\Models\Transaksi::with('kasir')
+        ->whereBetween('created_at', [$start->startOfDay(), $end->endOfDay()])
+        ->orderByDesc('created_at')
+        ->get();
+
+    return view('pos.riwayat', [
+        'transaksi' => $transaksi,
+        'start' => $start->format('Y-m-d'),
+        'end' => $end->format('Y-m-d'),
+    ]);
+}
+
+public function detail($kode)
+{
+        $transaksi = \App\Models\Transaksi::with(['items.barang', 'kasir'])
+            ->where('kode_transaksi', $kode)
+            ->first();
+
+        if (!$transaksi) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Transaksi tidak ditemukan.'
+            ]);
+        }
+
+        // Mapping data item
+        $items = $transaksi->items->map(function ($item) {
+            return [
+                'nama' => $item->barang->nama ?? '-',
+                'qty' => $item->qty,
+                'harga' => $item->harga,
+                'subtotal' => $item->qty * $item->harga
+            ];
+        });
+
+        return response()->json([
+            'status' => true,
+            'data' => [
+                'kode' => $transaksi->kode_transaksi,
+                'tanggal' => $transaksi->created_at->format('d/m/Y H:i'),
+                'kasir' => $transaksi->kasir->name ?? '-',
+                'total' => $transaksi->total,
+                'metode_pembayaran' => $transaksi->metode_pembayaran ?? '-',
+                'catatan' => $transaksi->catatan ?? '',
+                'items' => $items,
+            ]
+        ]);
+}
+
+
+
 
 }

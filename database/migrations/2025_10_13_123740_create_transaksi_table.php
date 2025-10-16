@@ -18,6 +18,7 @@ return new class extends Migration
             $table->decimal('total', 12, 2);
             $table->string('metode_pembayaran');
             $table->text('catatan')->nullable();
+            $table->string('nama_customer', 100)->nullable();
             $table->enum('status', ['selesai', 'batal', 'pending'])->default('selesai');
             $table->timestamps();
 
@@ -27,6 +28,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('transaksi');
+        Schema::table('transaksi', function (Blueprint $table) {
+    });
     }
 };

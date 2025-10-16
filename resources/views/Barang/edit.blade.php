@@ -1,7 +1,7 @@
 @extends('layouts.main')
 
 @section('judul')
-<title>Edit Data Barang</title>
+Edit Data Barang
 @endsection
 
 @push('css')
@@ -58,13 +58,17 @@
                 <div class="col-sm-9">
                   <select name="categories_id" id="categories_id" class="form-select" required>
                     @foreach($categories as $k)
-                      <option value="{{ $k->id }}" {{ $barang->categories_id == $k->id ? 'selected' : '' }}>
-                        {{ $k->nama }}
-                      </option>
+                    <option value="{{ $k->id }}" selected>{{ $k->nama }}</option>
+                    @endforeach
+                    @foreach($allCategories as $category)
+                      @if($category->id != $barang->category_id)
+                        <option value="{{ $category->id }}">{{ $category->nama }}</option>
+                      @endif
                     @endforeach
                   </select>
                 </div>
               </div>
+
 
               {{-- Harga Beli --}}
               <div class="mb-3 row">

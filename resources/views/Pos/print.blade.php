@@ -58,9 +58,22 @@
 
   struk += '------------------------------------------------\n';
 
-  // TOTAL
+  // TOTAL, METODE PEMBAYARAN, DLL
+  // DISKON (hanya kalau ada & > 0)
+  @if(!empty($transaksi->diskon) && floatval($transaksi->diskon) > 0)
+    struk += padRight('Diskon', '{{ $transaksi->diskon }}%') + '\n';
+  @endif
+
+
   struk += boldOn + padRight('TOTAL', 'Rp {{ number_format($transaksi->total, 0, ',', '.') }}') + '\n' + boldOff;
-  struk += padRight('Metode', '{{ strtoupper($transaksi->metode_pembayaran) }}') + '\n';
+  struk += padRight('Metode Pembayaran', '{{ strtoupper($transaksi->metode_pembayaran) }}') + '\n';
+  // CATATAN (hanya kalau ada)
+  @if(!empty($transaksi->catatan))
+    struk += '------------------------------------------------\n';
+    struk += 'Catatan:\n';
+    struk += '{{ trim(preg_replace("/\r|\n/", " ", $transaksi->catatan)) }}\n';
+  @endif
+
   struk += '------------------------------------------------\n';
   struk += center + 'Terima kasih 🙏\n';
   struk += center + '\n\n';

@@ -69,8 +69,10 @@ class BarangController extends Controller
      */
     public function edit(Barang $barang)
     {
-        $categories = Category::all();
-        return view('barang.edit', compact('barang', 'categories'));
+        $categories = Category::where('id', $barang->category_id)
+            ->get();
+        $allCategories = Category::all();
+        return view('barang.edit', compact('barang', 'categories', 'allCategories'));
     }
 
     /**

@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="{{ asset('assets/css/demo.css') }}" />
     <link rel="stylesheet" href="{{ asset('assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css') }}" />
     <link rel="stylesheet" href="{{ asset('assets/vendor/fonts/iconify-icons.css') }}" />
+    
     @stack('css')
 
     <style>
@@ -139,8 +140,12 @@
         </div>
 
         <div class="header-actions">
+          <!-- Tombol Transaksi -->
+          <a href="{{ route('pos.index') }}" class="action-btn" title="POS">
+            <i class="bx bx-money-withdraw"></i>
+          </a>
           <!-- Tombol Riwayat Transaksi -->
-          <a href="" class="action-btn" title="Riwayat Transaksi">
+          <a href="{{ route('pos.riwayat') }}" class="action-btn" title="Riwayat Transaksi">
             <i class="bx bx-history"></i>
           </a>
 
