@@ -1,49 +1,23 @@
-# === LARAVEL DEFAULT IGNORE ===
-/vendor/
-/node_modules/
+/.phpunit.cache
+/node_modules
 /public/build
 /public/hot
 /public/storage
 /storage/*.key
-/storage/app/public
-/storage/framework
-/storage/logs
 /storage/pail
-/bootstrap/cache
-
-# === ENV & CONFIG FILES ===
+/vendor
 .env
-.env.*
 .env.backup
 .env.production
-
-# === DEBUG & TEST ===
-npm-debug.log
-yarn-error.log
-.phpunit.result.cache
-.phpunit.cache
 .phpactor.json
+.phpunit.result.cache
 Homestead.json
 Homestead.yaml
+npm-debug.log
+yarn-error.log
 /auth.json
-
-# === IDE / TOOLING ===
-/.idea
-/.vscode
 /.fleet
+/.idea
 /.nova
+/.vscode
 /.zed
-
-# === HOSTING ENVIRONMENT (Hostinger / cPanel) ===
-/error_log
-/.cpanel
-/tmp
-/sessions
-/logs
-/cache
-/backups
-/.well-known
-
-# === MISC ===
-/.DS_Store
-Thumbs.db
