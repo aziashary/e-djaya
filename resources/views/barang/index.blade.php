@@ -124,9 +124,6 @@ Data Barang
       </div>
 
       <!-- Pagination -->
-      <div class="mt-3">
-        {{ $barang->links() }}
-      </div>
     </div>
   </div>
 </div>

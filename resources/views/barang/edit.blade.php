@@ -70,19 +70,19 @@ Edit Data Barang
               </div>
 
 
-              {{-- Harga Beli --}}
-              <div class="mb-3 row">
-                <label for="harga_beli" class="col-sm-3 col-form-label">Harga Beli</label>
-                <div class="col-sm-9">
-                  <input
-                    type="number"
-                    name="harga_beli"
-                    id="harga_beli"
-                    class="form-control"
-                    value="{{ old('harga_beli', $barang->harga_beli) }}"
-                    placeholder="Masukkan harga beli">
-                </div>
-              </div>
+              <!--{{-- Harga Beli --}}-->
+              <!--<div class="mb-3 row">-->
+              <!--  <label for="harga_beli" class="col-sm-3 col-form-label">Harga Beli</label>-->
+              <!--  <div class="col-sm-9">-->
+              <!--    <input-->
+              <!--      type="number"-->
+              <!--      name="harga_beli"-->
+              <!--      id="harga_beli"-->
+              <!--      class="form-control"-->
+              <!--      value="{{ old('harga_beli', $barang->harga_beli) }}"-->
+              <!--      placeholder="Masukkan harga beli">-->
+              <!--  </div>-->
+              <!--</div>-->
 
               {{-- Harga Jual --}}
               <div class="mb-3 row">

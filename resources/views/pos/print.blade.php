@@ -4,16 +4,19 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Print Struk {{ $transaksi->kode_transaksi }}</title>
-  <style>
-    body {
-      font-family: "Courier New", monospace;
-      font-size: 12px;
-      margin: 0;
-      padding: 10px;
-      color: #000;
-      background: #fff;
-    }
-  </style>
+   <style>
+  @page {
+    margin: 0; /* hilangin margin print bawaan */
+  }
+  body {
+    font-family: "Courier New", monospace;
+    font-size: 12px;
+    margin: 0;
+    padding: 0 10px 10px 10px; /* atas 0px biar ga ada spasi kosong */
+    color: #000;
+    background: #fff;
+  }
+</style>
 </head>
 <body>
 <script>

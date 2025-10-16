@@ -58,13 +58,13 @@ Input Data Barang
                 </div>
               </div>
 
-              {{-- Harga Beli --}}
-              <div class="mb-3 row">
-                <label for="harga_beli" class="col-sm-3 col-form-label">Harga Beli</label>
-                <div class="col-sm-9">
-                  <input type="number" name="harga_beli" id="harga_beli" class="form-control" placeholder="Masukkan harga beli" required>
-                </div>
-              </div>
+              <!--{{-- Harga Beli --}}-->
+              <!--<div class="mb-3 row">-->
+              <!--  <label for="harga_beli" class="col-sm-3 col-form-label">Harga Beli</label>-->
+              <!--  <div class="col-sm-9">-->
+              <!--    <input type="number" name="harga_beli" id="harga_beli" class="form-control" placeholder="Masukkan harga beli" required>-->
+              <!--  </div>-->
+              <!--</div>-->
 
               {{-- Harga Jual --}}
               <div class="mb-3 row">

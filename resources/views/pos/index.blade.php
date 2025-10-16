@@ -165,15 +165,25 @@
                     $catKey = Str::slug($deskripsi . '-' . ($kategori ?: 'tanpa'));
                     // choose an icon for category (simple map)
                     $catIcons = [
-                      'kopi' => 'bx bx-coffee',
-                      'teh' => 'bx bx-leaf',
-                      'susu' => 'bx bx-cup',
-                      'pisang' => 'bx bx-banana',
-                      'roti' => 'bx bx-baguette',
-                      'dimsum' => 'bx bx-food-menu',
-                      'mie' => 'bx bx-noodles',
-                    ];
-                    $catIcon = $catIcons[strtolower($kategori)] ?? $catIcons['default'];
+                    'kopi hitam' => 'bx bx-coffee',
+                    'kopi susu' => 'bx bx-coffee',
+                    'teh' => 'bx bx-leaf',
+                    'susu' => 'bx bx-cup',
+                    'pisang bakar' => 'bx bx-pen',
+                    'pisang goreng' => 'bx bx-pen',
+                    'rotbak' => 'bx bx-baguette',
+                    'rotbak mini' => 'bx bx-baguette',
+                    'dimsum' => 'bx bx-sushi',
+                    'mie goreng' => 'bx bx-bowl-hot',
+                    'mie rebus' => 'bx bx-bowl-hot',
+                    'mie lainnya' => 'bx bx-bowl-hot',
+                    'lainnya minuman' => 'bx bx-drink',
+                    'Ranu' => 'bx bx-coffee',
+                    'lainnya makanan' => 'bx bx-dish',
+                    'default' => 'bx bx-dish', // 👈 ini fallback kalau kategori gak cocok
+                  ];
+                  $catIcon = $catIcons[strtolower($kategori)] ?? $catIcons['default'];
+
                     $badgeCount = $items->count();
                   @endphp
 

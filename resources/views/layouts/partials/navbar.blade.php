@@ -34,26 +34,31 @@
           </ul>
         </li>
 
-        <!-- Laporan -->
-        <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle {{ request()->routeIs('laporan.*') ? 'active fw-bold' : '' }}" href="#" id="navbarLaporan" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-            <i class="bx bx-chart me-1"></i> Laporan
-          </a>
-          <ul class="dropdown-menu" aria-labelledby="navbarLaporan">
-            <li><a class="dropdown-item {{ request()->routeIs('laporan.keuangan') ? 'active' : '' }}" href="{{ route('laporan.keuangan') }}">Laporan Keuangan</a></li>
-            <li><a class="dropdown-item {{ request()->routeIs('laporan.produk') ? 'active' : '' }}" href="{{ route('laporan.produk') }}">Laporan Produk</a></li>
-          </ul>
-        </li>
+        @auth
+          @if(Auth::user()->level === 'admin')
+            <!-- Laporan -->
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle {{ request()->routeIs('laporan.*') ? 'active fw-bold' : '' }}" href="#" id="navbarLaporan" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bx bx-chart me-1"></i> Laporan
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="navbarLaporan">
+                <li><a class="dropdown-item {{ request()->routeIs('laporan.keuangan') ? 'active' : '' }}" href="{{ route('laporan.keuangan') }}">Laporan Keuangan</a></li>
+                <li><a class="dropdown-item {{ request()->routeIs('laporan.produk') ? 'active' : '' }}" href="{{ route('laporan.produk') }}">Laporan Produk</a></li>
+              </ul>
+            </li>
 
-        <!-- Pengaturan -->
-        <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle {{ request()->routeIs('users.*') ? 'active fw-bold' : '' }}" href="#" id="navbarUsers" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-            <i class="bx bx-cog me-1"></i> Pengaturan
-          </a>
-          <ul class="dropdown-menu" aria-labelledby="navbarUsers">
-            <li><a class="dropdown-item {{ request()->routeIs('users.index') ? 'active' : '' }}" href="{{ route('users.index') }}">User</a></li>
-          </ul>
-        </li>
+            <!-- Pengaturan -->
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle {{ request()->routeIs('users.*') ? 'active fw-bold' : '' }}" href="#" id="navbarUsers" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bx bx-cog me-1"></i> Pengaturan
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="navbarUsers">
+                <li><a class="dropdown-item {{ request()->routeIs('users.index') ? 'active' : '' }}" href="{{ route('users.index') }}">User</a></li>
+              </ul>
+            </li>
+          @endif
+        @endauth
+
 
         <!-- POS -->
         <li class="nav-item">
