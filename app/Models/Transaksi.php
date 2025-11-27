@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
 
 class Transaksi extends Model
 {
@@ -19,6 +21,7 @@ class Transaksi extends Model
         'diskon',
         'total',
         'metode_pembayaran',
+        'makan_dimana',
         'nama_customer',
         'catatan',
         'status',

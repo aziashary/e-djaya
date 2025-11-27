@@ -44,6 +44,7 @@
               <ul class="dropdown-menu" aria-labelledby="navbarLaporan">
                 <li><a class="dropdown-item {{ request()->routeIs('laporan.keuangan') ? 'active' : '' }}" href="{{ route('laporan.keuangan') }}">Laporan Keuangan</a></li>
                 <li><a class="dropdown-item {{ request()->routeIs('laporan.produk') ? 'active' : '' }}" href="{{ route('laporan.produk') }}">Laporan Produk</a></li>
+                <li><a class="dropdown-item {{ request()->routeIs('laporan.transaksi') ? 'active' : '' }}" href="{{ route('laporan.transaksi') }}">Riwayat Transaksi</a></li>
               </ul>
             </li>
 

@@ -76,68 +76,34 @@
   <!-- Tabel Data Transaksi -->
   <div class="card shadow-sm">
     <div class="card-body">
-      <h5 class="card-title mb-3">Daftar Transaksi</h5>
+      <h5 class="card-title mb-3">Summary Transaksi</h5>
       <div class="table-responsive">
-        <table id="tabelLaporan" class="table table-bordered table-striped align-middle w-100">
+        <table id="tabelRekap" class="table table-bordered table-striped align-middle w-100">
           <thead class="table-dark">
-            <tr class="text-center">
-              <th>No</th>
-              <th>Tanggal</th>
-              <th>Kode Transaksi</th>
-              <th>Total</th>
-              <th>Metode</th>
-              <th>Aksi</th>
+          <tr class="text-center">
+            <th style="width:8%;">No</th>
+            <th class="text-center">Tanggal</th>
+            <th class="text-center">Hari</th>
+            <th class="text-center">Penghasilan</th>
+            <th class="text-center">Jumlah Transaksi</th>
+          </tr>
+        </thead>
+        <tbody>
+          @forelse($rekapHarian as $i => $row)
+            <tr>
+              <td class="text-center">{{ $i + 1 }}</td>
+              <td class="text-center">{{ $row->tanggal_formatted }}</td>
+              <td class="text-center">{{ $row->hari }}</td>
+              <td class="text-center">Rp {{ number_format($row->penghasilan, 0, ',', '.') }}</td>
+              <td class="text-center">{{ $row->jumlah_transaksi }}</td>
             </tr>
-          </thead>
-          <tbody>
-            @foreach ($laporan as $index => $item)
-              <tr>
-                <td class="text-center">{{ $index + 1 }}</td>
-                <td>{{ \Carbon\Carbon::parse($item->created_at)->format('d/m/Y H:i') }}</td>
-                <td>{{ $item->kode_transaksi }}</td>
-                <td class="text-end fw-semibold">Rp {{ number_format($item->total, 0, ',', '.') }}</td>
-                <td class="text-center">
-                  <span class="badge bg-{{ $item->metode_pembayaran == 'cash' ? 'warning text-dark' : 'info' }}">
-                    {{ strtoupper($item->metode_pembayaran) }}
-                  </span>
-                </td>
-                <td class="text-center">
-                  <button class="btn btn-sm btn-outline-primary btn-detail" data-kode="{{ $item->kode_transaksi }}">
-                    <i class="bx bx-search-alt"></i>
-                  </button>
-                </td>
-              </tr>
-            @endforeach
-          </tbody>
+          @empty
+            <tr>
+              <td colspan="4" class="text-center text-muted py-3">Tidak ada data untuk periode ini</td>
+            </tr>
+          @endforelse
+        </tbody>
         </table>
-      </div>
-    </div>
-  </div>
-</div>
-
-
-<!-- Modal Struk Kasir -->
-<div class="modal fade" id="modalDetail" tabindex="-1" aria-labelledby="modalDetailLabel" aria-hidden="true">
-  <div class="modal-dialog modal-sm modal-dialog-centered">
-    <div class="modal-content shadow">
-      <div class="modal-header py-2">
-        <h6 class="modal-title fw-bold" id="modalDetailLabel">🧾 Detail Struk</h6>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body p-0">
-        <pre id="strukBody" class="p-3 mb-0" style="
-          font-family: monospace;
-          font-size: 12px;
-          white-space: pre-wrap;
-          background: #fff;
-          color: #000;
-        ">Memuat data...</pre>
-      </div>
-      <div class="modal-footer d-flex justify-content-between">
-        <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Tutup</button>
-        <button type="button" id="btnPrintStruk" class="btn btn-sm btn-primary">
-          <i class="bx bx-printer"></i> Print
-        </button>
       </div>
     </div>
   </div>
@@ -195,108 +161,24 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   // DataTables
-  $('#tabelLaporan').DataTable({
-    pageLength: 10,
-    responsive: true,
-    ordering: true,
-    language: {
-      search: "Cari:",
-      lengthMenu: "Tampilkan _MENU_ data",
-      info: "Menampilkan _START_ - _END_ dari _TOTAL_ data",
-      paginate: { previous: "Sebelumnya", next: "Berikutnya" },
-      zeroRecords: "Tidak ada data ditemukan"
-    },
-    columnDefs: [
-      { orderable: false, targets: [5] }, // kolom aksi tidak bisa sort
-      { className: "text-center", targets: [0, 4, 5] },
-      { className: "text-end", targets: [5] }
-    ]
-  });
-
-// Klik tombol Detail
-$(document).on('click', '.btn-detail', function() {
-  const kode = $(this).data('kode');
-  $('#modalDetail').modal('show');
-  $('#strukBody').text('Memuat data...');
-  $('#btnPrintStruk').data('kode', kode); 
-
-  $.ajax({
-    url: `/laporan/detail/${kode}`,
-    type: "GET",
-    success: function(res) {
-      if (res.status) {
-        renderStrukKasir(res.data);
-      } else {
-        $('#strukBody').text('Data tidak ditemukan.');
-      }
-    },
-    error: function() {
-      $('#strukBody').text('Gagal memuat data.');
-    }
-  });
+  $('#tabelRekap').DataTable({
+  pageLength: 10,
+  responsive: true,
+  ordering: true,
+  order: [[1, 'desc']], // urut tanggal terbaru
+  info: false,
+  language: {
+    search: "Cari:",
+    lengthMenu: "Tampilkan _MENU_ data",
+    paginate: { previous: "Sebelumnya", next: "Berikutnya" },
+    zeroRecords: "Tidak ada data ditemukan"
+  },
+  columnDefs: [
+    { className: "text-center", targets: [0, 3] },
+    { className: "text-end", targets: [2] },
+    { orderable: true, targets: [1,2,3] }
+  ]
 });
-
-function renderStrukKasir(data) {
-  const padRight = (left, right, width = 48) => {
-    const space = width - (left.length + right.length);
-    return left + ' '.repeat(space > 0 ? space : 0) + right;
-  };
-
-  const boldOn = '';   // simulasi aja
-  const boldOff = '';
-  const doubleSize = '';
-  const normalSize = '';
-  const center = '';
-  const left = '';
-
-  let struk = '';
-
-  // HEADER
-  struk += '           Warkop Djaya 590\n';
-  struk += '       Jln Raya Puncak No. 590\n';
-  struk += '------------------------------------------------\n';
-
-  // INFO TRANSAKSI
-  struk += `Kode   : ${data.kode}\n`;
-  struk += `Tanggal: ${data.tanggal}\n`;
-  struk += `Kasir  : ${data.kasir}\n`;
-  struk += '------------------------------------------------\n';
-
-  // ITEMS
-  data.items.forEach((item) => {
-    struk += `${item.nama}\n`;
-    struk += padRight(`${item.qty} x ${Number(item.harga).toLocaleString('id-ID')}`, `Rp ${Number(item.subtotal).toLocaleString('id-ID')}`) + '\n';
-  });
-
-  struk += '------------------------------------------------\n';
-
-  // TOTAL
-  struk += padRight('TOTAL', `Rp ${Number(data.total).toLocaleString('id-ID')}`) + '\n';
-  struk += padRight('Metode Pembayaran', data.metode_pembayaran ? data.metode_pembayaran.toUpperCase() : '-') + '\n';
-
-  // CATATAN (kalau ada)
-  if (data.catatan && data.catatan.trim() !== '') {
-    struk += '------------------------------------------------\n';
-    struk += 'Catatan:\n';
-    struk += data.catatan.trim().replace(/\r?\n|\r/g, ' ') + '\n';
-  }
-
-  struk += '------------------------------------------------\n';  
-  struk += '         Djaya !\n';
-
-  $('#strukBody').text(struk);
-}
-
-
-  // Tombol Print Struk
-  $('#btnPrintStruk').on('click', function() {
-    const kode = $('#btnPrintStruk').data('kode'); // ambil kode dari tombol
-    if (!kode) {
-      alert('Kode transaksi tidak ditemukan.');
-      return;
-    }
-    window.open(`/pos/print/${kode}`, '_blank');
-  });
 
 });
 

@@ -190,6 +190,7 @@ document.addEventListener('DOMContentLoaded', function() {
     struk += `Kode   : ${data.kode}\n`;
     struk += `Tanggal: ${data.tanggal}\n`;
     struk += `Kasir  : ${data.kasir}\n`;
+    struk += `Atas Nama  : ${data.nama_customer}\n`;
     struk += '------------------------------------------\n';
     data.items.forEach((item) => {
       struk += `${item.nama}\n`;
@@ -204,8 +205,7 @@ document.addEventListener('DOMContentLoaded', function() {
       struk += data.catatan.trim().replace(/\r?\n|\r/g, ' ') + '\n';
     }
     struk += '------------------------------------------\n';
-    struk += '         Terima Kasih 🙏\n';
-    struk += '   Semoga harimu menyenangkan!\n';
+    struk += '         Djaya!\n';
     $('#strukBody').text(struk);
   }
 

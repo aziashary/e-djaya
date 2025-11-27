@@ -51,6 +51,8 @@
   struk += left + `Kode   : {{ $transaksi->kode_transaksi }}\n`;
   struk += `Tanggal: {{ $transaksi->tanggal->format('d/m/Y H:i') }}\n`;
   struk += `Kasir  : {{ $transaksi->kasir->name ?? '-' }}\n`;
+  struk += `Atas Nama  : {{ $transaksi->nama_customer ?? '-' }}\n`;
+  struk += `{{ $transaksi->makan_disini ?? '-' }}\n`;
   struk += '------------------------------------------------\n';
 
   // ITEMS (daftar belanja)

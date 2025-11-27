@@ -20,6 +20,7 @@ class TransaksiController extends Controller
             'metode_pembayaran' => 'required|in:cash,qris',
             'catatan' => 'nullable|string',
             'nama_customer' => 'nullable|string',
+            'makan_dimana' => 'nullable|string',
             'items' => 'required|array|min:1',
             'items.*.barang_id' => 'nullable|integer',
             'items.*.nama' => 'required|string',
@@ -38,6 +39,7 @@ class TransaksiController extends Controller
                 'total' => $data['total'],
                 'metode_pembayaran' => $data['metode_pembayaran'],
                 'nama_customer' => $data['nama_customer'] ?? null,
+                'makan_dimana' =>$data['makan_dimana']?? null,
                 'catatan' => $data['catatan'] ?? null,
                 'status' => 'selesai',
             ]);
@@ -70,6 +72,16 @@ class TransaksiController extends Controller
 
         return view('pos.sukses', compact('transaksi'));
     }
+
+            public function destroy($kode)
+            {
+                $transaksi = Transaksi::findOrFail($kode);
+                $transaksi->delete();
+
+                return redirect()->back()->with('success', 'Transaksi berhasil dihapus.');
+            }
+
+
 
 
     public function print($kode)
@@ -131,6 +143,7 @@ public function detail($kode)
                 'kasir' => $transaksi->kasir->name ?? '-',
                 'total' => $transaksi->total,
                 'metode_pembayaran' => $transaksi->metode_pembayaran ?? '-',
+                'nama_customer' => $transaksi->nama_customer ?? '-',
                 'catatan' => $transaksi->catatan ?? '',
                 'items' => $items,
             ]

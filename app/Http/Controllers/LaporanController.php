@@ -15,35 +15,97 @@ class LaporanController extends Controller
 
     // 💰 LAPORAN KEUANGAN
     public function keuangan(Request $request)
-{
-    $start = $request->start_date ?? now()->subDays(7)->toDateString();
-    $end   = $request->end_date ?? now()->toDateString();
+    {
+        $start = $request->start_date ?? now()->subDays(7)->toDateString();
+        $end   = $request->end_date ?? now()->toDateString();
 
-    $query = \App\Models\Transaksi::with('kasir')
-        ->whereBetween(DB::raw('DATE(created_at)'), [$start, $end])
-        ->orderByDesc('created_at');
+        $query = \App\Models\Transaksi::with('kasir')
+            ->whereBetween(DB::raw('DATE(created_at)'), [$start, $end])
+            ->orderByDesc('created_at');
 
-    if ($request->search) {
-        $search = $request->search;
-        $query->where(function ($q) use ($search) {
-            $q->where('kode_transaksi', 'like', "%$search%")
-              ->orWhereHas('kasir', fn($q2) => $q2->where('name', 'like', "%$search%"));
-        });
-    }
+        if ($request->search) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('kode_transaksi', 'like', "%$search%")
+                ->orWhereHas('kasir', fn($q2) => $q2->where('name', 'like', "%$search%"));
+            });
+        }
 
-    $laporan = $query->get();
+        $laporan = $query->get();
 
-    $totalTransaksi = $laporan->count();
-    $totalNilai = $laporan->sum('total');
+        $totalTransaksi = $laporan->count();
+        $totalNilai = $laporan->sum('total');
 
-    // 🔥 Tambahan: total uang per metode pembayaran
-    $totalCash = $laporan->where('metode_pembayaran', 'cash')->sum('total');
-    $totalQris = $laporan->where('metode_pembayaran', 'qris')->sum('total');
+        // 🔥 Tambahan: total uang per metode pembayaran
+        $totalCash = $laporan->where('metode_pembayaran', 'cash')->sum('total');
+        $totalQris = $laporan->where('metode_pembayaran', 'qris')->sum('total');
 
-    return view('laporan.keuangan', compact(
-        'laporan', 'start', 'end', 'totalTransaksi', 'totalNilai', 'totalCash', 'totalQris'
-    ));
+        // === REKAP HARIAN (tanggal, penghasilan, jumlah transaksi) ===
+        $rekapHarian = \App\Models\Transaksi::selectRaw("DATE(created_at) as tanggal, SUM(total) as penghasilan, COUNT(*) as jumlah_transaksi")
+            ->whereBetween(DB::raw('DATE(created_at)'), [$start, $end])
+            ->groupBy(DB::raw('DATE(created_at)'))
+            ->orderByDesc('tanggal')
+            ->get()
+            ->map(function ($r) {
+                $carbon = \Carbon\Carbon::parse($r->tanggal);
+
+                // Mapping hari Inggris -> Indonesia
+                $hariIndo = [
+                    'Monday'    => 'Senin',
+                    'Tuesday'   => 'Selasa',
+                    'Wednesday' => 'Rabu',
+                    'Thursday'  => 'Kamis',
+                    'Friday'    => 'Jumat',
+                    'Saturday'  => 'Sabtu',
+                    'Sunday'    => 'Minggu',
+                ];
+
+                $r->hari = $hariIndo[$carbon->format('l')]; // nama hari dalam Bahasa Indonesia
+                $r->tanggal_formatted = $carbon->format('d/m/Y');
+
+                return $r;
+            });
+
+
+        return view('laporan.keuangan', compact(
+            'laporan', 'start', 'end',
+            'totalTransaksi', 'totalNilai', 'totalCash', 'totalQris',
+            'rekapHarian'
+        ));
 }
+
+
+    // Riwayat Transaksi
+        public function transaksi(Request $request)
+    {
+        $start = $request->start_date ?? now()->subDays(7)->toDateString();
+        $end   = $request->end_date ?? now()->toDateString();
+
+        $query = \App\Models\Transaksi::with('kasir')
+            ->whereBetween(DB::raw('DATE(created_at)'), [$start, $end])
+            ->orderByDesc('created_at');
+
+        if ($request->search) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('kode_transaksi', 'like', "%$search%")
+                ->orWhereHas('kasir', fn($q2) => $q2->where('name', 'like', "%$search%"));
+            });
+        }
+
+        $laporan = $query->get();
+
+        $totalTransaksi = $laporan->count();
+        $totalNilai = $laporan->sum('total');
+
+        // 🔥 Tambahan: total uang per metode pembayaran
+        $totalCash = $laporan->where('metode_pembayaran', 'cash')->sum('total');
+        $totalQris = $laporan->where('metode_pembayaran', 'qris')->sum('total');
+
+        return view('laporan.transaksi', compact(
+            'laporan', 'start', 'end', 'totalTransaksi', 'totalNilai', 'totalCash', 'totalQris'
+        ));
+    }
 
 
 // Detail transaksi
@@ -73,6 +135,7 @@ class LaporanController extends Controller
                 'total' => $transaksi->total,
                 'metode_pembayaran' => $transaksi->metode_pembayaran,
                 'catatan' => $transaksi->catatan,
+                'nama_customer' => $transaksi->nama_customer ?? '-',
                 'items' => $items
             ]
         ]);

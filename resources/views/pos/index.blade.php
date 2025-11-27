@@ -163,29 +163,35 @@
                 @foreach($kategoriGroup as $kategori => $items)
                   @php
                     $catKey = Str::slug($deskripsi . '-' . ($kategori ?: 'tanpa'));
-                    // choose an icon for category (simple map)
-                    $catIcons = [
-                    'kopi hitam' => 'bx bx-coffee',
-                    'kopi susu' => 'bx bx-coffee',
-                    'teh' => 'bx bx-leaf',
-                    'susu' => 'bx bx-cup',
-                    'pisang bakar' => 'bx bx-pen',
-                    'pisang goreng' => 'bx bx-pen',
-                    'rotbak' => 'bx bx-baguette',
-                    'rotbak mini' => 'bx bx-baguette',
-                    'dimsum' => 'bx bx-sushi',
-                    'mie goreng' => 'bx bx-bowl-hot',
-                    'mie rebus' => 'bx bx-bowl-hot',
-                    'mie lainnya' => 'bx bx-bowl-hot',
-                    'lainnya minuman' => 'bx bx-drink',
-                    'Ranu' => 'bx bx-coffee',
-                    'lainnya makanan' => 'bx bx-dish',
-                    'default' => 'bx bx-dish', // 👈 ini fallback kalau kategori gak cocok
-                  ];
-                  $catIcon = $catIcons[strtolower($kategori)] ?? $catIcons['default'];
 
+                    // pilih ikon kategori
+                    $catIcons = [
+                      'kopi hitam' => 'bx bx-coffee',
+                      'kopi susu' => 'bx bx-coffee',
+                      'teh' => 'bx bx-leaf',
+                      'susu' => 'bx bx-cup',
+                      'pisang bakar' => 'bx bx-pen',
+                      'pisang goreng' => 'bx bx-pen',
+                      'rotbak' => 'bx bx-baguette',
+                      'rotbak mini' => 'bx bx-baguette',
+                      'dimsum' => 'bx bx-sushi',
+                      'mie goreng' => 'bx bx-bowl-hot',
+                      'mie rebus' => 'bx bx-bowl-hot',
+                      'mie lainnya' => 'bx bx-bowl-hot',
+                      'lainnya minuman' => 'bx bx-drink',
+                      'Ranu' => 'bx bx-coffee',
+                      'lainnya makanan' => 'bx bx-dish',
+                      'default' => 'bx bx-dish',
+                    ];
+
+                    $catIcon = $catIcons[strtolower($kategori)] ?? $catIcons['default'];
                     $badgeCount = $items->count();
+
+                    if (strtolower($deskripsi) === 'minuman') {
+                        $items = $items->sortBy(fn($b) => strtolower($b->nama ?? $b->nama_barang));
+                    }
                   @endphp
+
 
                   <div class="accordion-item">
                     <h2 class="accordion-header" id="heading-{{ $catKey }}">
@@ -288,7 +294,15 @@
               <input type="text" class="form-control" id="nama_customer">
             </div>
 
-            <div class="col-md-9">
+            <div class="col-md-3">
+              <label for="makan_dimana" class="form-label">Makan Di Mana</label>
+              <select name="makan_dimana" id="makan_dimana" class="form-select">
+                <option value="Dine in">Dine In</option>
+                <option value="Takeaway">Take Away</option>
+              </select>
+            </div>
+
+            <div class="col-md-6">
               <label for="catatan" class="form-label fw-semibold">Catatan</label>
               <input type="text" class="form-control" id="catatan">
             </div>
@@ -303,13 +317,13 @@
             <div class="col-md-6">
               <label for="metode" class="form-label fw-semibold">Metode Pembayaran</label>
               <select id="metode" class="form-select">
-                <option value="qris">QRIS</option>
                 <option value="cash">Cash</option>
+                <option value="qris">Qris</option>
               </select>
             </div>
           </div>
 
-          <div id="cash-section" class="mt-4" style="display:none;">
+          <!-- <div id="cash-section" class="mt-4" style="display:none;">
             <div class="row g-3">
               <div class="col-md-6">
                 <label for="uang-diterima" class="form-label fw-semibold">Uang Diterima</label>
@@ -320,16 +334,16 @@
                 <input type="text" class="form-control" id="kembalian" readonly>
               </div>
             </div>
-          </div>
+          </div> -->
         </form>
       </div>
 
       <div class="modal-footer d-flex justify-content-between align-items-center flex-wrap">
         <div class="d-flex gap-2">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="bx bx-x"></i> Batal</button>
-          {{-- <button type="button" class="btn text-white" id="btn-rayab" style="background-color:#af3f3f; border-color:#af3f3f;">
+          <button type="button" class="btn text-white" id="btn-rayab" style="background-color:#af3f3f; border-color:#af3f3f;">
             <i class="bx bx-receipt"></i> Rayab doang
-          </button> --}}
+          </button>
         </div>
 
         <div>
@@ -503,19 +517,19 @@ $('#btn-open-bayar').on('click', function() {
   $('#modalBayar').modal('show');
   // default method hide cash section
   $('#cash-section').hide();
-  $('#metode').val('qris');
+  $('#metode').val('cash');
 });
 
 /* change metode */
-$('#metode').on('change', function() {
-  if ($(this).val() === 'cash') {
-    $('#cash-section').slideDown();
-  } else {
-    $('#cash-section').slideUp();
-    $('#uang-diterima').val('');
-    $('#kembalian').val('');
-  }
-});
+// $('#metode').on('change', function() {
+//   if ($(this).val() === 'cash') {
+//     $('#cash-section').slideDown();
+//   } else {
+//     $('#cash-section').slideUp();
+//     $('#uang-diterima').val('');
+//     $('#kembalian').val('');
+//   }
+// });
 
 /* recalc when diskon or uang diterima changes */
 $('#diskon, #uang-diterima').on('input', function() {
@@ -545,6 +559,7 @@ function buildPayload() {
   const total = subtotal - (subtotal * diskonPerc / 100);
   const metode = $('#metode').val();
   const nama_customer = $('#nama_customer').val();
+  const makan_dimana = $('#makan_dimana').val();
   const catatan = $('#catatan').val()?.trim() || '';
 
   const items = cart.map(it => ({
@@ -555,28 +570,27 @@ function buildPayload() {
     subtotal: it.harga * it.qty
   }));
 
-  return { subtotal, diskon: diskonPerc, total, metode_pembayaran: metode, nama_customer, catatan, items };
+  return { subtotal, diskon: diskonPerc, total, metode_pembayaran: metode, nama_customer, makan_dimana, catatan, items };
 }
 
-/* common AJAX POST */
 function submitTransaction(isPrint) {
   const payload = buildPayload();
+
   if (payload.items.length === 0) {
     alert('Keranjang kosong');
     return;
   }
 
-  // if cash, ensure uang diterima enough
-  if (payload.metode_pembayaran === 'cash') {
-    const uang = parseInt($('#uang-diterima').val()) || 0;
-    if (uang < payload.total) {
-      alert('Uang diterima kurang dari total pembayaran');
-      return;
-    }
-  }
+  // // validasi uang kalau cash
+  // if (payload.metode_pembayaran === 'cash') {
+  //   const uang = parseInt($('#uang-diterima').val()) || 0;
+  //   if (uang < payload.total) {
+  //     alert('Uang diterima kurang dari total pembayaran');
+  //     return;
+  //   }
+  // }
 
-  // send ajax
-    $.ajax({
+  $.ajax({
     url: "{{ route('pos.transaksi.store') }}",
     method: 'POST',
     data: {
@@ -586,18 +600,21 @@ function submitTransaction(isPrint) {
       total: payload.total,
       metode_pembayaran: payload.metode_pembayaran,
       nama_customer: payload.nama_customer,
+      makan_dimana: payload.makan_dimana,
       catatan: payload.catatan,
       items: payload.items
     },
     success: function(res) {
       if (res.success && res.kode_transaksi) {
-        // kosongkan keranjang & tutup modal
+        // reset modal & keranjang
         $('#modalBayar').modal('hide');
         cart = [];
         renderCart();
 
-        // buka tab baru untuk print (manual)
-        window.open("{{ url('/pos/print') }}/" + res.kode_transaksi, "_blank");
+        if (isPrint) {
+          // buka tab print kalau tombol "Bayar & Cetak"
+          window.open("{{ url('/pos/print') }}/" + res.kode_transaksi, "_blank");
+        }
 
         // redirect ke halaman sukses
         window.location.href = "{{ url('/pos/sukses') }}/" + res.kode_transaksi;
@@ -610,8 +627,8 @@ function submitTransaction(isPrint) {
       alert('Terjadi error saat menyimpan transaksi.');
     }
   });
-
 }
+
 
 /* Rayab doang (simpan tanpa print) */
 $('#btn-rayab').on('click', function() {

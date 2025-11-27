@@ -58,6 +58,10 @@ Route::middleware(['auth'])->prefix('pos')->name('pos.')->group(function () {
     // detail transaksi
     Route::get('/detail/{kode}', [TransaksiController::class, 'detail'])->name('detail');
 
+    // Delete
+    Route::delete('/transaksi/{kode}', [TransaksiController::class, 'destroy'])->name('destroy');
+
+
 });
 
 // Route::middleware(['auth'])
@@ -85,6 +89,9 @@ Route::middleware(['auth'])->prefix('laporan')->group(function () {
 
     // laporan keuangan
     Route::get('/keuangan', [LaporanController::class, 'keuangan'])->name('laporan.keuangan');
+
+    // riwayat transaksi
+    Route::get('/transaksi', [LaporanController::class, 'transaksi'])->name('laporan.transaksi');
 
     // laporan produk
     Route::get('/produk', [LaporanController::class, 'produk'])->name('laporan.produk');

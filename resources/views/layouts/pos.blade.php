@@ -140,6 +140,11 @@
         </div>
 
         <div class="header-actions">
+          <!-- Tombol Dashboard -->
+          <a href="{{ route('dashboard') }}" class="action-btn" title="Dashboard">
+            <i class="bx bx-chart"></i>
+          </a>
+
           <!-- Tombol Transaksi -->
           <a href="{{ route('pos.index') }}" class="action-btn" title="POS">
             <i class="bx bx-money-withdraw"></i>
