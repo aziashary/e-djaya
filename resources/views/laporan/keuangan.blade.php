@@ -24,6 +24,35 @@
   </form>
 
   <!-- Cards Summary -->
+  @if(auth()->user()->level === 'admin')
+  <div class="row mb-3">
+    <div class="col-md-4">
+      <div class="card text-center border-primary shadow-sm">
+        <div class="card-body">
+          <h6 class="text-muted">Omzet Warkop Djaya</h6>
+          <h3 class="fw-bold text-primary mb-0">Rp {{ number_format($totalNilaiWarkop, 0, ',', '.') }}</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card text-center border-success shadow-sm">
+        <div class="card-body">
+          <h6 class="text-muted">Omzet Ranu</h6>
+          <h3 class="fw-bold text-success mb-0">Rp {{ number_format($totalNilaiRanu, 0, ',', '.') }}</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card text-center bg-primary text-white shadow-sm">
+        <div class="card-body">
+          <h6 class="text-white">Omzet Gabungan</h6>
+          <h3 class="fw-bold mb-0">Rp {{ number_format($totalNilai, 0, ',', '.') }}</h3>
+        </div>
+      </div>
+    </div>
+  </div>
+  @endif
+
   <div class="row mb-4">
     <div class="col-md-6 col-xl-3">
       <div class="card text-center border-success shadow-sm">

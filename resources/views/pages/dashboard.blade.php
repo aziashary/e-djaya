@@ -9,35 +9,81 @@
   </h4>
 
   <!-- Cards Section -->
-  <div class="row g-4 mb-4">
-    <div class="col-lg-3 col-md-6">
-      <div class="card text-center p-3 shadow-sm">
-        <h6>Jumlah Transaksi Hari Ini</h6>
-        <h3 class="text-primary fw-bold">{{ $transaksi_hari_ini }}</h3>
+  @if(auth()->user()->level === 'admin')
+    <h6 class="fw-bold text-muted mb-2">Penjualan Hari Ini (Per Toko)</h6>
+    <div class="row g-4 mb-4">
+      <div class="col-lg-4 col-md-6">
+        <div class="card text-center p-3 shadow-sm border-primary">
+          <h6>Warkop Djaya</h6>
+          <h3 class="text-primary fw-bold">Rp{{ number_format($nilai_hari_ini_warkop, 0, ',', '.') }}</h3>
+        </div>
+      </div>
+      <div class="col-lg-4 col-md-6">
+        <div class="card text-center p-3 shadow-sm border-success">
+          <h6>Ranu</h6>
+          <h3 class="text-success fw-bold">Rp{{ number_format($nilai_hari_ini_ranu, 0, ',', '.') }}</h3>
+        </div>
+      </div>
+      <div class="col-lg-4 col-md-12">
+        <div class="card text-center p-3 shadow-sm bg-primary text-white">
+          <h6 class="text-white">Total Gabungan</h6>
+          <h3 class="fw-bold">Rp{{ number_format($nilai_hari_ini, 0, ',', '.') }}</h3>
+        </div>
       </div>
     </div>
+    
+    <h6 class="fw-bold text-muted mb-2">Penjualan Bulan Ini (Per Toko)</h6>
+    <div class="row g-4 mb-4">
+      <div class="col-lg-4 col-md-6">
+        <div class="card text-center p-3 shadow-sm border-primary">
+          <h6>Warkop Djaya</h6>
+          <h3 class="text-primary fw-bold">Rp{{ number_format($nilai_bulan_ini_warkop, 0, ',', '.') }}</h3>
+        </div>
+      </div>
+      <div class="col-lg-4 col-md-6">
+        <div class="card text-center p-3 shadow-sm border-success">
+          <h6>Ranu</h6>
+          <h3 class="text-success fw-bold">Rp{{ number_format($nilai_bulan_ini_ranu, 0, ',', '.') }}</h3>
+        </div>
+      </div>
+      <div class="col-lg-4 col-md-12">
+        <div class="card text-center p-3 shadow-sm bg-success text-white">
+          <h6 class="text-white">Total Gabungan</h6>
+          <h3 class="fw-bold">Rp{{ number_format($nilai_bulan_ini, 0, ',', '.') }}</h3>
+        </div>
+      </div>
+    </div>
+  @else
+    <div class="row g-4 mb-4">
+      <div class="col-lg-3 col-md-6">
+        <div class="card text-center p-3 shadow-sm">
+          <h6>Jumlah Transaksi Hari Ini</h6>
+          <h3 class="text-primary fw-bold">{{ $transaksi_hari_ini }}</h3>
+        </div>
+      </div>
 
-    <div class="col-lg-3 col-md-6">
-      <div class="card text-center p-3 shadow-sm">
-        <h6>Jumlah Transaksi Bulan Ini</h6>
-        <h3 class="text-success fw-bold">{{ $transaksi_bulan_ini }}</h3>
+      <div class="col-lg-3 col-md-6">
+        <div class="card text-center p-3 shadow-sm">
+          <h6>Jumlah Transaksi Bulan Ini</h6>
+          <h3 class="text-success fw-bold">{{ $transaksi_bulan_ini }}</h3>
+        </div>
       </div>
-    </div>
 
-    <div class="col-lg-3 col-md-6">
-      <div class="card text-center p-3 shadow-sm">
-        <h6>Nilai Transaksi Hari Ini</h6>
-        <h3 class="text-primary fw-bold">Rp{{ number_format($nilai_hari_ini, 0, ',', '.') }}</h3>
+      <div class="col-lg-3 col-md-6">
+        <div class="card text-center p-3 shadow-sm">
+          <h6>Nilai Transaksi Hari Ini</h6>
+          <h3 class="text-primary fw-bold">Rp{{ number_format($nilai_hari_ini, 0, ',', '.') }}</h3>
+        </div>
       </div>
-    </div>
 
-    <div class="col-lg-3 col-md-6">
-      <div class="card text-center p-3 shadow-sm">
-        <h6>Nilai Transaksi Bulan Ini</h6>
-        <h3 class="text-success fw-bold">Rp{{ number_format($nilai_bulan_ini, 0, ',', '.') }}</h3>
+      <div class="col-lg-3 col-md-6">
+        <div class="card text-center p-3 shadow-sm">
+          <h6>Nilai Transaksi Bulan Ini</h6>
+          <h3 class="text-success fw-bold">Rp{{ number_format($nilai_bulan_ini, 0, ',', '.') }}</h3>
+        </div>
       </div>
     </div>
-  </div>
+  @endif
 
   <!-- Grafik Penjualan -->
   {{-- <div class="card mb-4 shadow-sm">

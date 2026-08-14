@@ -184,8 +184,13 @@ document.addEventListener('DOMContentLoaded', function() {
       return left + ' '.repeat(space > 0 ? space : 0) + right;
     };
     let struk = '';
-    struk += '           Warkop Djaya 590\n';
-    struk += '       Jln Raya Puncak No. 590\n';
+    if (data.level === 'staff') {
+      struk += '                   Ranu\n';
+      struk += 'Jl. Raya Puncak - Gadog, Tugu Selatan, Bogor\n';
+    } else {
+      struk += '           Warkop Djaya 590\n';
+      struk += '       Jln Raya Puncak No. 590\n';
+    }
     struk += '------------------------------------------\n';
     struk += `Kode   : ${data.kode}\n`;
     struk += `Tanggal: ${data.tanggal}\n`;
@@ -205,7 +210,11 @@ document.addEventListener('DOMContentLoaded', function() {
       struk += data.catatan.trim().replace(/\r?\n|\r/g, ' ') + '\n';
     }
     struk += '------------------------------------------\n';
-    struk += '         Djaya!\n';
+    if (data.level === 'staff') {
+      struk += '               Terima Kasih\n';
+    } else {
+      struk += '         Djaya!\n';
+    }
     $('#strukBody').text(struk);
   }
 

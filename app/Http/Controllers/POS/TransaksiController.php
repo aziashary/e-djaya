@@ -100,10 +100,18 @@ class TransaksiController extends Controller
         $start = $end->copy()->subMonths(2);
     }
 
-    $transaksi = \App\Models\Transaksi::with('kasir')
+    $query = \App\Models\Transaksi::with('kasir')
         ->whereBetween('created_at', [$start->startOfDay(), $end->endOfDay()])
-        ->orderByDesc('created_at')
-        ->get();
+        ->orderByDesc('created_at');
+
+    $userLevel = auth()->user()->level;
+    if ($userLevel === 'staff' || $userLevel === 'kasir') {
+        $query->whereHas('kasir', function($q) use ($userLevel) {
+            $q->where('level', $userLevel);
+        });
+    }
+
+    $transaksi = $query->get();
 
     return view('pos.riwayat', [
         'transaksi' => $transaksi,
@@ -141,6 +149,7 @@ public function detail($kode)
                 'kode' => $transaksi->kode_transaksi,
                 'tanggal' => $transaksi->created_at->format('d/m/Y H:i'),
                 'kasir' => $transaksi->kasir->name ?? '-',
+                'level' => $transaksi->kasir->level ?? 'kasir',
                 'total' => $transaksi->total,
                 'metode_pembayaran' => $transaksi->metode_pembayaran ?? '-',
                 'nama_customer' => $transaksi->nama_customer ?? '-',

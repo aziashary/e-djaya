@@ -43,8 +43,13 @@
   let struk = '';
 
   // HEADER
-  struk += center + boldOn + doubleSize + 'Warkop Djaya 590\n' + boldOff + normalSize;
-  struk += center + 'Jln Raya Puncak No. 590\n';
+  @if(Auth::user()->level === 'staff')
+    struk += center + boldOn + doubleSize + 'Ranu\n' + boldOff + normalSize;
+    struk += center + 'Jl. Raya Puncak - Gadog, Tugu Selatan, Bogor\n';
+  @else
+    struk += center + boldOn + doubleSize + 'Warkop Djaya 590\n' + boldOff + normalSize;
+    struk += center + 'Jln Raya Puncak No. 590\n';
+  @endif
   struk += left +'------------------------------------------------\n';
 
   // INFO TRANSAKSI
@@ -80,9 +85,13 @@
   @endif
 
   struk += '------------------------------------------------\n';
-  struk += center + 'Terima kasih 🙏\n';
-  struk += center + '\n\n';
-  struk += center + 'Djaya!\n';
+  @if(Auth::user()->level === 'staff')
+    struk += center + 'Terima Kasih\n';
+  @else
+    struk += center + 'Terima kasih 🙏\n';
+    struk += center + '\n\n';
+    struk += center + 'Djaya!\n';
+  @endif
   struk += left +'------------------------------------------------\n';
 
   // AUTO CUT

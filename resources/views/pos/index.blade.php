@@ -112,7 +112,7 @@
     {{-- LEFT: Search + Tabs + Accordion --}}
     <div class="pos-left">
       <div class="d-flex align-items-center justify-content-between mb-3">
-         <h5 class="fw-bold mb-0">💰Kasier e-Warkop Djaya</h5>
+         <h5 class="fw-bold mb-0">💰{{ Auth::user()->level === 'staff' ? 'Kasir Ranu' : 'Kasir e-Warkop Djaya' }}</h5>
       </div>
 
       {{-- Search --}}

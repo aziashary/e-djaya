@@ -11,11 +11,17 @@ class PosController extends Controller
     public function index()
     {
         // Ambil kategori yang memiliki barang aktif, dengan eager load barang aktif
-        $categories = Category::with(['barang' => function ($q) {
+        $categoryQuery = Category::with(['barang' => function ($q) {
             $q->where('is_active', 1);
         }])->whereHas('barang', function ($q) {
             $q->where('is_active', 1);
-        })->get();
+        });
+
+        if (auth()->user()->level === 'staff') {
+            $categoryQuery->where('nama', 'like', '%Ranu Atas%');
+        }
+
+        $categories = $categoryQuery->get();
 
         /**
          * Struktur $data yang dihasilkan:

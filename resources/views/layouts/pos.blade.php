@@ -132,10 +132,10 @@
       <!-- Header POS -->
       <div class="pos-header">
         <div class="brand">
-          <img src="{{ asset('assets/img/logo.png') }}" alt="Logo Toko">
+          <img src="{{ Auth::user()->level === 'staff' ? asset('assets/img/ranu logo.png') : asset('assets/img/logo.png') }}" alt="Logo Toko">
           <div>
             <h4>Point Of Sales</h4>
-            <small>Djaya 590</small>
+            <small>{{ Auth::user()->level === 'staff' ? 'Ranu' : 'Djaya 590' }}</small>
           </div>
         </div>
 

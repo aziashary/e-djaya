@@ -23,6 +23,13 @@ class LaporanController extends Controller
             ->whereBetween(DB::raw('DATE(created_at)'), [$start, $end])
             ->orderByDesc('created_at');
 
+        $userLevel = auth()->user()->level;
+        if ($userLevel === 'staff' || $userLevel === 'kasir') {
+            $query->whereHas('kasir', function($q) use ($userLevel) {
+                $q->where('level', $userLevel);
+            });
+        }
+
         if ($request->search) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
@@ -36,14 +43,29 @@ class LaporanController extends Controller
         $totalTransaksi = $laporan->count();
         $totalNilai = $laporan->sum('total');
 
+        $totalNilaiWarkop = 0;
+        $totalNilaiRanu = 0;
+
+        if ($userLevel === 'admin') {
+            $totalNilaiWarkop = $laporan->filter(fn($t) => $t->kasir && in_array($t->kasir->level, ['kasir', 'admin']))->sum('total');
+            $totalNilaiRanu = $laporan->filter(fn($t) => $t->kasir && $t->kasir->level === 'staff')->sum('total');
+        }
+
         // 🔥 Tambahan: total uang per metode pembayaran
         $totalCash = $laporan->where('metode_pembayaran', 'cash')->sum('total');
         $totalQris = $laporan->where('metode_pembayaran', 'qris')->sum('total');
 
         // === REKAP HARIAN (tanggal, penghasilan, jumlah transaksi) ===
-        $rekapHarian = \App\Models\Transaksi::selectRaw("DATE(created_at) as tanggal, SUM(total) as penghasilan, COUNT(*) as jumlah_transaksi")
-            ->whereBetween(DB::raw('DATE(created_at)'), [$start, $end])
-            ->groupBy(DB::raw('DATE(created_at)'))
+        $queryRekap = \App\Models\Transaksi::selectRaw("DATE(created_at) as tanggal, SUM(total) as penghasilan, COUNT(*) as jumlah_transaksi")
+            ->whereBetween(DB::raw('DATE(created_at)'), [$start, $end]);
+
+        if ($userLevel === 'staff' || $userLevel === 'kasir') {
+            $queryRekap->whereHas('kasir', function($q) use ($userLevel) {
+                $q->where('level', $userLevel);
+            });
+        }
+
+        $rekapHarian = $queryRekap->groupBy(DB::raw('DATE(created_at)'))
             ->orderByDesc('tanggal')
             ->get()
             ->map(function ($r) {
@@ -69,7 +91,7 @@ class LaporanController extends Controller
 
         return view('laporan.keuangan', compact(
             'laporan', 'start', 'end',
-            'totalTransaksi', 'totalNilai', 'totalCash', 'totalQris',
+            'totalTransaksi', 'totalNilai', 'totalNilaiWarkop', 'totalNilaiRanu', 'totalCash', 'totalQris',
             'rekapHarian'
         ));
 }
@@ -84,6 +106,13 @@ class LaporanController extends Controller
         $query = \App\Models\Transaksi::with('kasir')
             ->whereBetween(DB::raw('DATE(created_at)'), [$start, $end])
             ->orderByDesc('created_at');
+
+        $userLevel = auth()->user()->level;
+        if ($userLevel === 'staff' || $userLevel === 'kasir') {
+            $query->whereHas('kasir', function($q) use ($userLevel) {
+                $q->where('level', $userLevel);
+            });
+        }
 
         if ($request->search) {
             $search = $request->search;
@@ -131,6 +160,7 @@ class LaporanController extends Controller
             'data' => [
                 'kode' => $transaksi->kode_transaksi,
                 'kasir' => $transaksi->kasir->name ?? '-',
+                'level' => $transaksi->kasir->level ?? 'kasir',
                 'tanggal' => $transaksi->created_at->format('d/m/Y H:i'),
                 'total' => $transaksi->total,
                 'metode_pembayaran' => $transaksi->metode_pembayaran,
@@ -155,7 +185,19 @@ class LaporanController extends Controller
             $query = \App\Models\TransaksiItem::with(['barang.category'])
                 ->whereHas('transaksi', function ($q) use ($start, $end) {
                     $q->whereBetween(DB::raw('DATE(created_at)'), [$start, $end]);
+                    $userLevel = auth()->user()->level;
+                    if ($userLevel === 'staff' || $userLevel === 'kasir') {
+                        $q->whereHas('kasir', function($q2) use ($userLevel) {
+                            $q2->where('level', $userLevel);
+                        });
+                    }
                 });
+
+            if (auth()->user()->level === 'staff') {
+                $query->whereHas('barang.category', function($q) {
+                    $q->where('nama', 'like', '%Ranu Atas%');
+                });
+            }
 
             if ($search) {
                 $query->whereHas('barang', function ($q) use ($search) {

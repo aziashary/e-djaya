@@ -85,7 +85,7 @@
               <th>Tanggal</th>
               <th>Kode Transaksi</th>
               <th>Total</th>
-              <!-- <th>Metode</th> -->
+              <th>Kasir (Toko)</th>
               <th>Detail</th>
             </tr>
           </thead>
@@ -96,11 +96,14 @@
                 <td>{{ \Carbon\Carbon::parse($item->created_at)->format('d/m/Y H:i') }}</td>
                 <td>{{ $item->kode_transaksi }}</td>
                 <td class="text-end fw-semibold">Rp {{ number_format($item->total, 0, ',', '.') }}</td>
-                <!-- <td class="text-center">
-                  <span class="badge bg-{{ $item->metode_pembayaran == 'cash' ? 'warning text-dark' : 'info' }}">
-                    {{ strtoupper($item->metode_pembayaran) }}
-                  </span>
-                </td> -->
+                <td class="text-center">
+                  {{ $item->kasir->username ?? '-' }}
+                  @if($item->kasir)
+                    <br><span class="badge bg-{{ $item->kasir->level == 'staff' ? 'success' : 'primary' }}">
+                      {{ $item->kasir->level == 'staff' ? 'Ranu' : 'Warkop' }}
+                    </span>
+                  @endif
+                </td>
                 <td class="text-center">
             <button class="btn btn-sm btn-outline-primary btn-detail" data-kode="{{ $item->kode_transaksi }}">
               <i class="bx bx-search-alt"></i>
@@ -216,9 +219,9 @@ document.addEventListener('DOMContentLoaded', function() {
       zeroRecords: "Tidak ada data ditemukan"
     },
     columnDefs: [
-      { orderable: false, targets: [4] }, // kolom aksi tidak bisa sort
-      { className: "text-center", targets: [0, 3, 4] },
-      { className: "text-end", targets: [4] }
+      { orderable: false, targets: [5] }, // kolom aksi tidak bisa sort
+      { className: "text-center", targets: [0, 4, 5] },
+      { className: "text-end", targets: [3] }
     ]
   });
 
@@ -261,8 +264,13 @@ function renderStrukKasir(data) {
   let struk = '';
 
   // HEADER
-  struk += '           Warkop Djaya 590\n';
-  struk += '       Jln Raya Puncak No. 590\n';
+  if (data.level === 'staff') {
+    struk += '                      Ranu\n';
+    struk += '  Jl. Raya Puncak - Gadog, Tugu Selatan, Bogor\n';
+  } else {
+    struk += '           Warkop Djaya 590\n';
+    struk += '       Jln Raya Puncak No. 590\n';
+  }
   struk += '------------------------------------------------\n';
 
   // INFO TRANSAKSI
@@ -292,7 +300,11 @@ function renderStrukKasir(data) {
   }
 
   struk += '------------------------------------------------\n';  
-  struk += '         Djaya !\n';
+  if (data.level === 'staff') {
+    struk += '                  Terima Kasih\n';
+  } else {
+    struk += '         Djaya !\n';
+  }
 
   $('#strukBody').text(struk);
 }

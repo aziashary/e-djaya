@@ -4,7 +4,7 @@
 
     <!-- Brand -->
     <a href="{{ url('/') }}" class="navbar-brand d-flex align-items-center">
-      <img src="{{ asset('assets/img/logo.png') }}" alt="KasirApp Logo" style="height: 38px;" class="me-2">
+      <img src="{{ Auth::user()->level === 'staff' ? asset('assets/img/ranu logo.png') : asset('assets/img/logo.png') }}" alt="KasirApp Logo" style="height: 38px;" class="me-2">
     </a>
 
     <!-- Toggle (for mobile) -->
