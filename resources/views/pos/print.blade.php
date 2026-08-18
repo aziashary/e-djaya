@@ -83,7 +83,7 @@
     content: content
   };
 
-  fetch('http://localhost:9100', {
+  fetch('http://localhost:9100/print', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
