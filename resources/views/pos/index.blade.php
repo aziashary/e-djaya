@@ -612,8 +612,8 @@ function submitTransaction(isPrint) {
         renderCart();
 
         if (isPrint) {
-          // buka tab print kalau tombol "Bayar & Cetak"
-          window.open("{{ url('/pos/print') }}/" + res.kode_transaksi, "_blank");
+          // buka tab print kalau tombol "Bayar & Cetak", set copies = 2
+          window.open("{{ url('/pos/print') }}/" + res.kode_transaksi + "?copies=2", "_blank");
         }
 
         // redirect ke halaman sukses

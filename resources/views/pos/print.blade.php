@@ -82,24 +82,39 @@
     content: content
   };
 
-  fetch('http://localhost:9100/print', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(payload)
-  })
-  .then(response => {
-    if(!response.ok) {
-      console.error('Print failed:', response.statusText);
+  const copies = {{ request('copies', 1) }};
+
+  const printJob = () => {
+    return fetch('http://localhost:9100/print', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+  };
+
+  const doPrint = async () => {
+    try {
+      for (let i = 0; i < copies; i++) {
+        const response = await printJob();
+        if (!response.ok) {
+          console.error('Print failed:', response.statusText);
+        }
+        // delay 1.5 detik jika ada copy selanjutnya biar mesin print ada jeda
+        if (i < copies - 1) {
+          await new Promise(r => setTimeout(r, 1500));
+        }
+      }
+      setTimeout(() => window.close(), 1000);
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Gagal print ke localhost:9100. Pastikan aplikasi print lokal berjalan.');
+      setTimeout(() => window.close(), 1000);
     }
-    setTimeout(() => window.close(), 1000);
-  })
-  .catch(error => {
-    console.error('Error:', error);
-    alert('Gagal print ke localhost:9100. Pastikan aplikasi print lokal berjalan.');
-    setTimeout(() => window.close(), 1000);
-  });
+  };
+  
+  doPrint();
 })();
 </script>
 </body>
