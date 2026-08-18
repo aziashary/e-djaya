@@ -68,9 +68,9 @@
 
   // FOOTER
   @if(Auth::user()->level === 'staff')
-    content.push({ type: "text", text: "Terima Kasih", align: "center" });
+    content.push({ type: "text", text: "Terima Kasih!", align: "center" });
   @else
-    content.push({ type: "text", text: "Terima kasih 🙏", align: "center" });
+    content.push({ type: "text", text: "Terima kasih!", align: "center" });
     content.push({ type: "text", text: "Djaya!", align: "center" });
   @endif
 
