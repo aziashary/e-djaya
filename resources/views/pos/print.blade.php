@@ -75,7 +75,7 @@
   @endif
 
   // EXTRA SPACING
-  content.push({ type: "feed", lines: 1 });
+  // (Dihapus agar tidak ada space kosong sama sekali di bawah sebelum di-cut)
 
   const payload = {
     cut: true,
