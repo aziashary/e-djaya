@@ -71,12 +71,11 @@
     content.push({ type: "text", text: "Terima Kasih", align: "center" });
   @else
     content.push({ type: "text", text: "Terima kasih 🙏", align: "center" });
-    content.push({ type: "feed", lines: 2 });
     content.push({ type: "text", text: "Djaya!", align: "center" });
   @endif
 
   // EXTRA SPACING
-  content.push({ type: "feed", lines: 3 });
+  content.push({ type: "feed", lines: 1 });
 
   const payload = {
     cut: true,
