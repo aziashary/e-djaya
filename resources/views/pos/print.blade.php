@@ -21,88 +21,86 @@
 <body>
 <script>
 (function() {
-  const ESC = '\x1B';
-  const GS  = '\x1D';
-
-  const center     = ESC + 'a' + '\x01';
-  const left       = ESC + 'a' + '\x00';
-  const boldOn     = ESC + 'E' + '\x01';
-  const boldOff    = ESC + 'E' + '\x00';
-  const doubleSize = ESC + '!' + '\x20';
-  const normalSize = ESC + '!' + '\x00';
-  const cutFull    = GS  + 'V' + '\x00'; // auto-cut full
-
-  // Helper buat rata kanan subtotal
-  function padRight(leftText, rightText, width = 48) {
-    const totalLength = leftText.length + rightText.length;
-    if (totalLength >= width) return leftText + rightText;
-    const spaces = ' '.repeat(width - totalLength);
-    return leftText + spaces + rightText;
-  }
-
-  let struk = '';
+  const content = [];
 
   // HEADER
   @if(Auth::user()->level === 'staff')
-    struk += center + boldOn + doubleSize + 'Ranu\n' + boldOff + normalSize;
-    struk += center + 'Jl. Raya Puncak - Gadog, Tugu Selatan, Bogor\n';
+    content.push({ type: "text", text: "Ranu", align: "center", bold: true, size: "large" });
+    content.push({ type: "text", text: "Jl. Raya Puncak - Gadog, Tugu Selatan, Bogor", align: "center" });
   @else
-    struk += center + boldOn + doubleSize + 'Warkop Djaya 590\n' + boldOff + normalSize;
-    struk += center + 'Jln Raya Puncak No. 590\n';
+    content.push({ type: "text", text: "Warkop Djaya 590", align: "center", bold: true, size: "large" });
+    content.push({ type: "text", text: "Jln Raya Puncak No. 590", align: "center" });
   @endif
-  struk += left +'------------------------------------------------\n';
+  content.push({ type: "divider" });
 
   // INFO TRANSAKSI
-  struk += left + `Kode   : {{ $transaksi->kode_transaksi }}\n`;
-  struk += `Tanggal: {{ $transaksi->tanggal->format('d/m/Y H:i') }}\n`;
-  struk += `Kasir  : {{ $transaksi->kasir->name ?? '-' }}\n`;
-  struk += `Atas Nama  : {{ $transaksi->nama_customer ?? '-' }}\n`;
-  struk += `{{ $transaksi->makan_disini ?? '-' }}\n`;
-  struk += '------------------------------------------------\n';
+  content.push({ type: "row", left: "Kode", right: "{{ $transaksi->kode_transaksi }}" });
+  content.push({ type: "row", left: "Tanggal", right: "{{ $transaksi->tanggal->format('d/m/Y H:i') }}" });
+  content.push({ type: "row", left: "Kasir", right: "{{ $transaksi->kasir->name ?? '-' }}" });
+  content.push({ type: "row", left: "Atas Nama", right: "{{ $transaksi->nama_customer ?? '-' }}" });
+  content.push({ type: "text", text: "{{ $transaksi->makan_disini ?? '-' }}", align: "left" });
+  content.push({ type: "divider" });
 
   // ITEMS (daftar belanja)
   @foreach($transaksi->items as $item)
-    struk += `{{ $item->nama }}\n`;
-    struk += padRight('{{ $item->qty }}  x  {{ number_format($item->harga, 0, ',', '.') }}', '{{ number_format($item->subtotal, 0, ',', '.') }}') + '\n';
+    content.push({ type: "text", text: "{{ $item->nama }}", align: "left" });
+    content.push({ type: "row", left: "{{ $item->qty }}  x  {{ number_format($item->harga, 0, ',', '.') }}", right: "{{ number_format($item->subtotal, 0, ',', '.') }}" });
   @endforeach
+  content.push({ type: "divider" });
 
-  struk += '------------------------------------------------\n';
-
-  // TOTAL, METODE PEMBAYARAN, DLL
-  // DISKON (hanya kalau ada & > 0)
+  // DISKON
   @if(!empty($transaksi->diskon) && floatval($transaksi->diskon) > 0)
-    struk += padRight('Diskon', '{{ $transaksi->diskon }}%') + '\n';
+    content.push({ type: "row", left: "Diskon", right: "{{ $transaksi->diskon }}%" });
   @endif
 
+  // TOTAL & METODE PEMBAYARAN
+  content.push({ type: "row", left: "TOTAL", right: "Rp {{ number_format($transaksi->total, 0, ',', '.') }}", bold: true });
+  content.push({ type: "row", left: "Metode Pembayaran", right: "{{ strtoupper($transaksi->metode_pembayaran) }}" });
 
-  struk += boldOn + padRight('TOTAL', 'Rp {{ number_format($transaksi->total, 0, ',', '.') }}') + '\n' + boldOff;
-  struk += padRight('Metode Pembayaran', '{{ strtoupper($transaksi->metode_pembayaran) }}') + '\n';
-  // CATATAN (hanya kalau ada)
+  // CATATAN
   @if(!empty($transaksi->catatan))
-    struk += '------------------------------------------------\n';
-    struk += 'Catatan:\n';
-    struk += '{{ trim(preg_replace("/\r|\n/", " ", $transaksi->catatan)) }}\n';
+    content.push({ type: "divider" });
+    content.push({ type: "text", text: "Catatan:", align: "left" });
+    content.push({ type: "text", text: "{{ trim(preg_replace('/\\r|\\n/', ' ', $transaksi->catatan)) }}", align: "left" });
   @endif
 
-  struk += '------------------------------------------------\n';
+  content.push({ type: "divider" });
+
+  // FOOTER
   @if(Auth::user()->level === 'staff')
-    struk += center + 'Terima Kasih\n';
+    content.push({ type: "text", text: "Terima Kasih", align: "center" });
   @else
-    struk += center + 'Terima kasih 🙏\n';
-    struk += center + '\n\n';
-    struk += center + 'Djaya!\n';
+    content.push({ type: "text", text: "Terima kasih 🙏", align: "center" });
+    content.push({ type: "feed", lines: 2 });
+    content.push({ type: "text", text: "Djaya!", align: "center" });
   @endif
-  struk += left +'------------------------------------------------\n';
 
-  // AUTO CUT
-  struk += cutFull;
+  // EXTRA SPACING
+  content.push({ type: "feed", lines: 3 });
 
-  // Kirim ke RawBT (langsung cetak)
-  const encoded = encodeURIComponent(struk);
-  window.location.href = "rawbt:" + encoded;
+  const payload = {
+    cut: true,
+    content: content
+  };
 
-  // Tutup otomatis biar clean
-  setTimeout(() => window.close(), 2000);
+  fetch('http://localhost:9100', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(payload)
+  })
+  .then(response => {
+    if(!response.ok) {
+      console.error('Print failed:', response.statusText);
+    }
+    setTimeout(() => window.close(), 1000);
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    alert('Gagal print ke localhost:9100. Pastikan aplikasi print lokal berjalan.');
+    setTimeout(() => window.close(), 1000);
+  });
 })();
 </script>
 </body>
