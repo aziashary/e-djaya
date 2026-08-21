@@ -25,7 +25,7 @@
 
   // HEADER
   @if(Auth::user()->level === 'staff')
-    content.push({ type: "text", text: "Ranu", align: "center", bold: true, size: "large" });
+    content.push({ type: "text", text: "KOPI RANU", align: "center", bold: true, size: "large" });
     content.push({ type: "text", text: "Jl. Raya Puncak - Gadog, Tugu Selatan, Bogor", align: "center" });
   @else
     content.push({ type: "text", text: "Warkop Djaya 590", align: "center", bold: true, size: "large" });
@@ -68,6 +68,8 @@
 
   // FOOTER
   @if(Auth::user()->level === 'staff')
+    content.push({ type: "text", text: "HARGA DIATAS ADALAH", align: "center" });
+    content.push({ type: "text", text: "HARGA PROMO KOPI PAGI", align: "center" });
     content.push({ type: "text", text: "Terima Kasih!", align: "center" });
   @else
     content.push({ type: "text", text: "Terima kasih!", align: "center" });
