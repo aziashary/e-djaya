@@ -18,7 +18,7 @@ class PosController extends Controller
         });
 
         if (auth()->user()->level === 'staff') {
-            $categoryQuery->where('nama', 'like', '%Ranu Atas%');
+            $categoryQuery->where('nama', 'like', '%R A N U promo pagi%');
         }
 
         $categories = $categoryQuery->get();
