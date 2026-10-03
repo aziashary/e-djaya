@@ -1,229 +1,184 @@
 @extends('layouts.main')
 
-@section('judul', 'Laporan Produk')
+@section('judul', 'Laporan Produk | e-Djaya')
 
 @section('content')
-<div class="container-fluid">
-  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-    <h4 class="fw-bold mb-0">📦 Laporan Produk</h4>
-  </div>
+<section aria-labelledby="product-report-title">
+  <header class="page-header">
+    <div class="page-heading">
+      <p class="page-kicker">Analisis operasional</p>
+      <h1 id="product-report-title" class="page-title">Laporan produk</h1>
+      <p class="page-description">Temukan produk dan kategori yang paling banyak terjual pada periode pilihan.</p>
+    </div>
+  </header>
 
-  <!-- Filter -->
-  <form class="row g-2 mb-4" method="GET" action="{{ route('laporan.produk') }}">
-    <div class="col-md-6 col-lg-4">
-      <input type="text" id="date-range" name="daterange" value="{{ $start }} - {{ $end }}" class="form-control" placeholder="Pilih rentang tanggal" readonly>
-    </div>
-    <div class="col-md-6 col-lg-4">
-      <input type="text" name="search" value="{{ $search }}" class="form-control" placeholder="Cari nama barang...">
-    </div>
-    <div class="col-12 col-lg-4 d-grid">
-      <button type="submit" class="btn btn-primary">
-        <i class="bx bx-search-alt"></i> Filter
-      </button>
+  <form class="card card-body mb-4" method="GET" action="{{ route('laporan.produk') }}">
+    <div class="row g-3 align-items-end">
+      <div class="col-lg-4">
+        <label for="date-range" class="form-label">Rentang tanggal</label>
+        <input type="text" id="date-range" value="{{ $start }} sampai {{ $end }}" class="form-control" readonly>
+        <input type="hidden" name="start_date" value="{{ $start }}">
+        <input type="hidden" name="end_date" value="{{ $end }}">
+      </div>
+      <div class="col-lg-5">
+        <label for="search" class="form-label">Nama produk</label>
+        <input type="search" id="search" name="search" value="{{ $search }}" class="form-control" placeholder="Cari produk" autocomplete="off">
+      </div>
+      <div class="col-lg-3 d-grid">
+        <button type="submit" class="btn btn-primary">Tampilkan laporan</button>
+      </div>
     </div>
   </form>
 
-  <!-- Cards Summary -->
-  <div class="row mb-4">
-    <div class="col-md-6 col-xl-3">
-      <div class="card text-center border-success shadow-sm">
-        <div class="card-body">
-          <h6 class="text-muted">Jumlah Makanan</h6>
-          <h3 class="fw-bold text-success mb-0">{{ number_format($jumlahMakanan, 0, ',', '.') }}</h3>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-6 col-xl-3">
-      <div class="card text-center border-primary shadow-sm">
-        <div class="card-body">
-          <h6 class="text-muted">Nilai Makanan</h6>
-          <h3 class="fw-bold text-primary mb-0">Rp {{ number_format($totalMakanan, 0, ',', '.') }}</h3>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-6 col-xl-3">
-      <div class="card text-center border-warning shadow-sm">
-        <div class="card-body">
-          <h6 class="text-muted">Jumlah Minuman</h6>
-          <h3 class="fw-bold text-warning mb-0">{{ number_format($jumlahMinuman, 0, ',', '.') }}</h3>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-6 col-xl-3">
-      <div class="card text-center border-info shadow-sm">
-        <div class="card-body">
-          <h6 class="text-muted">Nilai Minuman</h6>
-          <h3 class="fw-bold text-info mb-0">Rp {{ number_format($totalMinuman, 0, ',', '.') }}</h3>
-        </div>
-      </div>
-    </div>
+  <div class="metric-grid" aria-label="Ringkasan produk">
+    <article class="metric-card metric-card--primary metric-card--wide">
+      <p class="metric-label">Nilai produk terjual</p>
+      <p class="metric-value">Rp {{ number_format($totalMakanan + $totalMinuman, 0, ',', '.') }}</p>
+      <p class="metric-note">{{ number_format($produkLaku->sum('total_qty'), 0, ',', '.') }} item pada periode pilihan</p>
+    </article>
+    <article class="metric-card">
+      <p class="metric-label">Jenis makanan terjual</p>
+      <p class="metric-value">{{ number_format($jumlahMakanan, 0, ',', '.') }}</p>
+    </article>
+    <article class="metric-card">
+      <p class="metric-label">Nilai makanan</p>
+      <p class="metric-value">Rp {{ number_format($totalMakanan, 0, ',', '.') }}</p>
+    </article>
+    <article class="metric-card">
+      <p class="metric-label">Jenis minuman terjual</p>
+      <p class="metric-value">{{ number_format($jumlahMinuman, 0, ',', '.') }}</p>
+    </article>
+    <article class="metric-card">
+      <p class="metric-label">Nilai minuman</p>
+      <p class="metric-value">Rp {{ number_format($totalMinuman, 0, ',', '.') }}</p>
+    </article>
   </div>
 
-  <!-- Filter info -->
-    <div class="alert alert-info d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 mb-3">
-      <div>
-        <strong>📅 Periode:</strong> 
-        {{ \Carbon\Carbon::parse($start)->translatedFormat('d F Y') }} – 
-        {{ \Carbon\Carbon::parse($end)->translatedFormat('d F Y') }}
-      </div>
-      @if(request('search'))
-        <div>
-          <strong>🔍 Pencarian:</strong> "{{ request('search') }}"
-        </div>
-      @endif
-    </div>
-    
-  <!-- Dua tabel: Barang paling laku & Kategori paling laku -->
+  <div class="alert alert-info mb-3" role="status">
+    <strong>Periode:</strong> {{ \Carbon\Carbon::parse($start)->translatedFormat('d F Y') }} sampai {{ \Carbon\Carbon::parse($end)->translatedFormat('d F Y') }}
+    @if($search)
+      <span class="d-block mt-1"><strong>Pencarian:</strong> {{ $search }}</span>
+    @endif
+  </div>
+
   <div class="row g-3">
-    <div class="col-lg-8">
-      <div class="card shadow-sm h-100">
-        <div class="card-body">
-          <h5 class="card-title mb-3">Yang Paling Laku</h5>
-          <div class="table-responsive">
-            <table id="tabelBarang" class="table table-bordered table-striped align-middle w-100">
-              <thead class="table-dark">
-                <tr class="text-center">
-                  <th>No</th>
-                  <th>Nama Barang</th>
-                  <th>Kategori</th>
-                  <th>Qty</th>
-                  <th>Total</th>
+    <div class="col-xl-8">
+      <section class="card task-panel h-100" aria-labelledby="best-product-title">
+        <div class="card-header">
+          <h2 id="best-product-title" class="h5 fw-bold mb-1">Produk paling laku</h2>
+          <p class="small text-muted mb-0">Diurutkan berdasarkan jumlah item terjual.</p>
+        </div>
+        @if($produkLaku->isEmpty())
+          <div class="empty-state" role="status">
+            <strong>Belum ada data produk</strong>
+            Ubah periode atau kata pencarian untuk melihat hasil lain.
+          </div>
+        @else
+          <div class="table-responsive" tabindex="0" aria-label="Tabel produk paling laku, geser jika diperlukan">
+            <table id="tabelBarang" class="table align-middle w-100">
+              <thead>
+                <tr>
+                  <th scope="col">Produk</th>
+                  <th scope="col">Kategori</th>
+                  <th scope="col" class="text-end">Jumlah</th>
+                  <th scope="col" class="text-end">Nilai</th>
                 </tr>
               </thead>
               <tbody>
-                @foreach ($produkLaku as $index => $item)
+                @foreach($produkLaku as $item)
                   <tr>
-                    <td class="text-center">{{ $index + 1 }}</td>
-                    <td>{{ $item->barang->nama ?? '(Barang tidak ditemukan)' }}</td>
-                    <td>{{ $item->barang->category->deskripsi ?? '-' }}</td>
-                    <td class="text-center">{{ $item->total_qty }}</td>
-                    <td class="text-end fw-semibold">Rp {{ number_format($item->total_nilai, 0, ',', '.') }}</td>
+                    <td class="fw-semibold">{{ $item->barang->nama ?? 'Produk tidak tersedia' }}</td>
+                    <td>{{ $item->barang->category->nama ?? 'Tanpa kategori' }}</td>
+                    <td class="text-end">{{ $item->total_qty }}</td>
+                    <td class="text-end fw-bold">Rp {{ number_format($item->total_nilai, 0, ',', '.') }}</td>
                   </tr>
                 @endforeach
               </tbody>
             </table>
           </div>
-        </div>
-      </div>
+        @endif
+      </section>
     </div>
 
-    <div class="col-lg-4">
-      <div class="card shadow-sm h-100">
-        <div class="card-body">
-          <h5 class="card-title mb-3">Kategori Paling Laku</h5>
-          <div class="table-responsive">
-            <table id="tabelKategori" class="table table-bordered table-striped align-middle w-100">
-              <thead class="table-dark">
-                <tr class="text-center">
-                  <th>No</th>
-                  <th>Kategori</th>
-                  <th>Qty</th>
-                  <th>Total</th>
+    <div class="col-xl-4">
+      <section class="card task-panel h-100" aria-labelledby="best-category-title">
+        <div class="card-header">
+          <h2 id="best-category-title" class="h5 fw-bold mb-1">Kategori paling laku</h2>
+          <p class="small text-muted mb-0">Ringkasan penjualan per kategori.</p>
+        </div>
+        @if($kategoriLaku->isEmpty())
+          <div class="empty-state" role="status">Kategori belum memiliki transaksi pada periode ini.</div>
+        @else
+          <div class="table-responsive" tabindex="0" aria-label="Tabel kategori paling laku, geser jika diperlukan">
+            <table id="tabelKategori" class="table align-middle w-100">
+              <thead>
+                <tr>
+                  <th scope="col">Kategori</th>
+                  <th scope="col" class="text-end">Jumlah</th>
+                  <th scope="col" class="text-end">Nilai</th>
                 </tr>
               </thead>
               <tbody>
-                @foreach ($kategoriLaku as $index => $kat)
+                @foreach($kategoriLaku as $category)
                   <tr>
-                    <td class="text-center">{{ $loop->iteration }}</td>
-                    <td>{{ $kat['nama'] }}</td>
-                    <td class="text-center">{{ $kat['total_qty'] }}</td>
-                    <td class="text-end fw-semibold">Rp {{ number_format($kat['total_nilai'], 0, ',', '.') }}</td>
+                    <td class="fw-semibold">{{ $category['nama'] }}</td>
+                    <td class="text-end">{{ $category['total_qty'] }}</td>
+                    <td class="text-end fw-bold">Rp {{ number_format($category['total_nilai'], 0, ',', '.') }}</td>
                   </tr>
                 @endforeach
               </tbody>
             </table>
           </div>
-        </div>
-      </div>
+        @endif
+      </section>
     </div>
   </div>
-</div>
+</section>
 @endsection
 
-@push('styles')
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/litepicker/dist/css/litepicker.css" />
-<style>
-.litepicker {
-  font-family: inherit;
-  border-radius: 8px;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-}
-</style>
-@endpush
-
 @push('scripts')
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/litepicker/dist/bundle.js"></script>
-
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-
-  // Litepicker
+document.addEventListener('DOMContentLoaded', () => {
+  const range = document.getElementById('date-range');
   const picker = new Litepicker({
-    element: document.getElementById('date-range'),
+    element: range,
     singleMode: false,
-    numberOfMonths: 2,
-    numberOfColumns: 2,
+    numberOfMonths: window.innerWidth < 768 ? 1 : 2,
+    numberOfColumns: window.innerWidth < 768 ? 1 : 2,
     format: 'YYYY-MM-DD',
     startDate: '{{ $start }}',
     endDate: '{{ $end }}',
     autoApply: true,
     lang: 'id-ID'
   });
-
   picker.on('selected', (startDate, endDate) => {
-    const form = document.querySelector('form');
-    const startInput = document.createElement('input');
-    const endInput = document.createElement('input');
-    startInput.type = 'hidden';
-    startInput.name = 'start_date';
-    startInput.value = startDate.format('YYYY-MM-DD');
-    endInput.type = 'hidden';
-    endInput.name = 'end_date';
-    endInput.value = endDate.format('YYYY-MM-DD');
-    form.appendChild(startInput);
-    form.appendChild(endInput);
-    form.submit();
+    document.querySelector('[name="start_date"]').value = startDate.format('YYYY-MM-DD');
+    document.querySelector('[name="end_date"]').value = endDate.format('YYYY-MM-DD');
+    range.value = `${startDate.format('YYYY-MM-DD')} sampai ${endDate.format('YYYY-MM-DD')}`;
   });
 
-  // DataTables untuk Barang
-  $('#tabelBarang').DataTable({
-    pageLength: 10,
-    responsive: true,
-    ordering: true,
-    language: {
-      search: "Cari:",
-      lengthMenu: "Tampilkan _MENU_ data",
-      info: "Menampilkan _START_ - _END_ dari _TOTAL_ data",
-      paginate: { previous: "Sebelumnya", next: "Berikutnya" },
-      zeroRecords: "Tidak ada data ditemukan"
-    },
-    columnDefs: [
-      { className: "text-center", targets: [0, 2, 3] },
-      { className: "text-end", targets: [4] }
-    ]
-  });
+  if (document.getElementById('tabelBarang')) {
+    $('#tabelBarang').DataTable({
+      pageLength: 10,
+      info: false,
+      language: {
+        search: 'Cari produk:',
+        lengthMenu: 'Tampilkan _MENU_ data',
+        paginate: { previous: 'Sebelumnya', next: 'Berikutnya' },
+        zeroRecords: 'Produk tidak ditemukan'
+      }
+    });
+  }
 
-  // DataTables untuk Kategori
-  $('#tabelKategori').DataTable({
-    pageLength: 5,
-    responsive: true,
-    ordering: true,
-    searching: false,
-    lengthChange: false,
-     info: false,
-    language: {
-      paginate: { previous: "Sebelumnya", next: "Berikutnya" },
-      zeroRecords: "Tidak ada data kategori"
-    },
-    columnDefs: [
-      { className: "text-center", targets: [0, 2] },
-      { className: "text-end", targets: [3] }
-    ]
-  });
+  if (document.getElementById('tabelKategori')) {
+    $('#tabelKategori').DataTable({
+      pageLength: 5,
+      searching: false,
+      lengthChange: false,
+      info: false,
+      language: { paginate: { previous: 'Sebelumnya', next: 'Berikutnya' } }
+    });
+  }
 });
 </script>
 @endpush

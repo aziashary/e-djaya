@@ -1,38 +1,32 @@
 @extends('layouts.main')
 
-@section('judul', 'Laporan')
+@section('judul', 'Laporan | e-Djaya')
 
 @section('content')
-<div class="container-fluid">
-  <!-- Header -->
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <h4 class="fw-bold mb-0">📊 Laporan</h4>
-  </div>
-
-  <!-- Nav Tabs -->
-  <ul class="nav nav-tabs mb-4" id="laporanTabs" role="tablist">
-    <li class="nav-item" role="presentation">
-      <button class="nav-link active" id="laporan-keuangan-tab" data-bs-toggle="tab" data-bs-target="#laporan-keuangan" type="button" role="tab">
-        💰 Laporan Keuangan
-      </button>
-    </li>
-    <li class="nav-item" role="presentation">
-      <button class="nav-link" id="laporan-produk-tab" data-bs-toggle="tab" data-bs-target="#laporan-produk" type="button" role="tab">
-        📦 Laporan Produk
-      </button>
-    </li>
-  </ul>
-
-  <div class="tab-content" id="laporanTabsContent">
-    <!-- Laporan Keuangan -->
-    <div class="tab-pane fade show active" id="laporan-keuangan" role="tabpanel">
-      @include('laporan.partials.keuangan')
+<section aria-labelledby="reports-title">
+  <header class="page-header">
+    <div class="page-heading">
+      <p class="page-kicker">Analisis operasional</p>
+      <h1 id="reports-title" class="page-title">Laporan</h1>
+      <p class="page-description">Pilih laporan berdasarkan keputusan yang ingin diperiksa.</p>
     </div>
+  </header>
 
-    <!-- Laporan Produk -->
-    <div class="tab-pane fade" id="laporan-produk" role="tabpanel">
-      @include('laporan.partials.produk')
+  <div class="card task-panel">
+    <div class="list-group list-group-flush">
+      <a href="{{ route('laporan.keuangan') }}" class="list-group-item list-group-item-action p-4">
+        <strong class="d-block mb-1">Laporan keuangan</strong>
+        <span class="text-muted">Periksa omzet, transaksi, tunai, dan QRIS berdasarkan periode.</span>
+      </a>
+      <a href="{{ route('laporan.produk') }}" class="list-group-item list-group-item-action p-4">
+        <strong class="d-block mb-1">Laporan produk</strong>
+        <span class="text-muted">Lihat produk serta kategori yang paling banyak terjual.</span>
+      </a>
+      <a href="{{ route('laporan.transaksi') }}" class="list-group-item list-group-item-action p-4">
+        <strong class="d-block mb-1">Riwayat transaksi</strong>
+        <span class="text-muted">Cari transaksi, buka detail struk, cetak, atau hapus transaksi.</span>
+      </a>
     </div>
   </div>
-</div>
+</section>
 @endsection

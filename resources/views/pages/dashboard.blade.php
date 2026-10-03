@@ -1,214 +1,116 @@
 @extends('layouts.main')
 
-@section('judul', 'Dashboard Wardjay')
+@section('judul', 'Dashboard e-Djaya')
 
 @section('content')
-<div class="container-fluid">
-  <h4 class="mb-4 fw-bold text-primary">
-  Dashboard Warkop Djaya
-  </h4>
+@php
+  $level = strtolower((string) auth()->user()->level);
+  $isAdmin = $level === 'admin';
+  $historyRoute = $isAdmin ? route('laporan.transaksi') : route('pos.riwayat');
+@endphp
 
-  <!-- Cards Section -->
-  @if(auth()->user()->level === 'admin')
-    <h6 class="fw-bold text-muted mb-2">Penjualan Hari Ini (Per Toko)</h6>
-    <div class="row g-4 mb-4">
-      <div class="col-lg-4 col-md-6">
-        <div class="card text-center p-3 shadow-sm border-primary">
-          <h6>Warkop Djaya</h6>
-          <h3 class="text-primary fw-bold">Rp{{ number_format($nilai_hari_ini_warkop, 0, ',', '.') }}</h3>
-        </div>
-      </div>
-      <div class="col-lg-4 col-md-6">
-        <div class="card text-center p-3 shadow-sm border-success">
-          <h6>Ranu</h6>
-          <h3 class="text-success fw-bold">Rp{{ number_format($nilai_hari_ini_ranu, 0, ',', '.') }}</h3>
-        </div>
-      </div>
-      <div class="col-lg-4 col-md-12">
-        <div class="card text-center p-3 shadow-sm bg-primary text-white">
-          <h6 class="text-white">Total Gabungan</h6>
-          <h3 class="fw-bold">Rp{{ number_format($nilai_hari_ini, 0, ',', '.') }}</h3>
-        </div>
-      </div>
+<section aria-labelledby="dashboard-title">
+  <header class="page-header">
+    <div class="page-heading">
+      <p class="page-kicker">{{ now()->translatedFormat('l, d F Y') }}</p>
+      <h1 id="dashboard-title" class="page-title">Dashboard operasional</h1>
+      <p class="page-description">Ringkasan transaksi yang tercatat pada akun dan toko Anda.</p>
     </div>
-    
-    <h6 class="fw-bold text-muted mb-2">Penjualan Bulan Ini (Per Toko)</h6>
-    <div class="row g-4 mb-4">
-      <div class="col-lg-4 col-md-6">
-        <div class="card text-center p-3 shadow-sm border-primary">
-          <h6>Warkop Djaya</h6>
-          <h3 class="text-primary fw-bold">Rp{{ number_format($nilai_bulan_ini_warkop, 0, ',', '.') }}</h3>
-        </div>
-      </div>
-      <div class="col-lg-4 col-md-6">
-        <div class="card text-center p-3 shadow-sm border-success">
-          <h6>Ranu</h6>
-          <h3 class="text-success fw-bold">Rp{{ number_format($nilai_bulan_ini_ranu, 0, ',', '.') }}</h3>
-        </div>
-      </div>
-      <div class="col-lg-4 col-md-12">
-        <div class="card text-center p-3 shadow-sm bg-success text-white">
-          <h6 class="text-white">Total Gabungan</h6>
-          <h3 class="fw-bold">Rp{{ number_format($nilai_bulan_ini, 0, ',', '.') }}</h3>
-        </div>
-      </div>
+    <div class="page-actions">
+      <a href="{{ route('pos.index') }}" class="btn btn-primary">
+        <i class="bx bx-cart me-1" aria-hidden="true"></i>
+        Mulai transaksi
+      </a>
+    </div>
+  </header>
+
+  @if($isAdmin)
+    <div class="metric-grid" aria-label="Ringkasan penjualan admin">
+      <article class="metric-card metric-card--primary metric-card--wide">
+        <p class="metric-label">Omzet hari ini, semua toko</p>
+        <p class="metric-value">Rp {{ number_format($nilai_hari_ini, 0, ',', '.') }}</p>
+        <p class="metric-note">Gabungan transaksi Warkop Djaya dan Ranu</p>
+      </article>
+      <article class="metric-card">
+        <p class="metric-label">Warkop Djaya hari ini</p>
+        <p class="metric-value">Rp {{ number_format($nilai_hari_ini_warkop, 0, ',', '.') }}</p>
+      </article>
+      <article class="metric-card">
+        <p class="metric-label">Ranu hari ini</p>
+        <p class="metric-value">Rp {{ number_format($nilai_hari_ini_ranu, 0, ',', '.') }}</p>
+      </article>
+      <article class="metric-card metric-card--wide">
+        <p class="metric-label">Omzet bulan ini, semua toko</p>
+        <p class="metric-value">Rp {{ number_format($nilai_bulan_ini, 0, ',', '.') }}</p>
+      </article>
+      <article class="metric-card">
+        <p class="metric-label">Warkop Djaya bulan ini</p>
+        <p class="metric-value">Rp {{ number_format($nilai_bulan_ini_warkop, 0, ',', '.') }}</p>
+      </article>
+      <article class="metric-card">
+        <p class="metric-label">Ranu bulan ini</p>
+        <p class="metric-value">Rp {{ number_format($nilai_bulan_ini_ranu, 0, ',', '.') }}</p>
+      </article>
     </div>
   @else
-    <div class="row g-4 mb-4">
-      <div class="col-lg-3 col-md-6">
-        <div class="card text-center p-3 shadow-sm">
-          <h6>Jumlah Transaksi Hari Ini</h6>
-          <h3 class="text-primary fw-bold">{{ $transaksi_hari_ini }}</h3>
-        </div>
-      </div>
-
-      <div class="col-lg-3 col-md-6">
-        <div class="card text-center p-3 shadow-sm">
-          <h6>Jumlah Transaksi Bulan Ini</h6>
-          <h3 class="text-success fw-bold">{{ $transaksi_bulan_ini }}</h3>
-        </div>
-      </div>
-
-      <div class="col-lg-3 col-md-6">
-        <div class="card text-center p-3 shadow-sm">
-          <h6>Nilai Transaksi Hari Ini</h6>
-          <h3 class="text-primary fw-bold">Rp{{ number_format($nilai_hari_ini, 0, ',', '.') }}</h3>
-        </div>
-      </div>
-
-      <div class="col-lg-3 col-md-6">
-        <div class="card text-center p-3 shadow-sm">
-          <h6>Nilai Transaksi Bulan Ini</h6>
-          <h3 class="text-success fw-bold">Rp{{ number_format($nilai_bulan_ini, 0, ',', '.') }}</h3>
-        </div>
-      </div>
+    <div class="metric-grid" aria-label="Ringkasan penjualan toko">
+      <article class="metric-card metric-card--primary metric-card--wide">
+        <p class="metric-label">Omzet hari ini</p>
+        <p class="metric-value">Rp {{ number_format($nilai_hari_ini, 0, ',', '.') }}</p>
+        <p class="metric-note">{{ number_format($transaksi_hari_ini, 0, ',', '.') }} transaksi tercatat</p>
+      </article>
+      <article class="metric-card">
+        <p class="metric-label">Transaksi hari ini</p>
+        <p class="metric-value">{{ number_format($transaksi_hari_ini, 0, ',', '.') }}</p>
+      </article>
+      <article class="metric-card">
+        <p class="metric-label">Transaksi bulan ini</p>
+        <p class="metric-value">{{ number_format($transaksi_bulan_ini, 0, ',', '.') }}</p>
+      </article>
+      <article class="metric-card metric-card--wide">
+        <p class="metric-label">Omzet bulan ini</p>
+        <p class="metric-value">Rp {{ number_format($nilai_bulan_ini, 0, ',', '.') }}</p>
+      </article>
     </div>
   @endif
 
-  <!-- Grafik Penjualan -->
-  {{-- <div class="card mb-4 shadow-sm">
-    <div class="card-header bg-light">
-      <strong>Grafik Penjualan 7 Hari Terakhir</strong>
+  <section class="card task-panel" aria-labelledby="recent-title">
+    <div class="card-header d-flex align-items-center justify-content-between gap-3">
+      <div>
+        <h2 id="recent-title" class="h5 mb-1 fw-bold">Transaksi terbaru</h2>
+        <p class="mb-0 text-muted small">Lima transaksi terakhir yang dapat diakses akun ini.</p>
+      </div>
+      <a href="{{ $historyRoute }}" class="btn btn-outline-secondary">Lihat riwayat</a>
     </div>
-    <div class="card-body">
-      <canvas id="chartPenjualan" height="100"></canvas>
-    </div>
-  </div> --}}
-
-  <!-- Tabel Transaksi Terbaru -->
-  <div class="card shadow-sm">
-    <div class="card-header bg-light">
-      <strong>Transaksi Terbaru</strong>
-    </div>
-    <br
-    <div class="card-body table-responsive">
-      <table class="table table-bordered table-striped align-middle">
+    <div class="table-responsive" tabindex="0" aria-label="Tabel transaksi terbaru, geser jika diperlukan">
+      <table class="table align-middle">
         <thead>
-          <tr class="text-center">
-            <th>#</th>
-            <th>Kode</th>
-            <th>Tanggal</th>
-            <th>Total</th>
-            <th>Kasir</th>
+          <tr>
+            <th scope="col">Kode</th>
+            <th scope="col">Waktu</th>
+            <th scope="col" class="text-end">Total</th>
+            <th scope="col">Kasir</th>
           </tr>
         </thead>
         <tbody>
-          @forelse ($transaksi_terbaru as $index => $t)
+          @forelse ($transaksi_terbaru as $t)
             <tr>
-              <td class="text-center">{{ $index + 1 }}</td>
-              <td>{{ $t->kode_transaksi }}</td>
-              <td>{{ $t->created_at->format('d M Y H:i') }}</td>
-              <td>Rp{{ number_format($t->total, 0, ',', '.') }}</td>
-              <td>{{ $t->kasir->username ?? '-' }}</td>
+              <td><span class="transaction-code">{{ $t->kode_transaksi }}</span></td>
+              <td>{{ $t->tanggal->translatedFormat('d M Y, H:i') }}</td>
+              <td class="text-end fw-bold">Rp {{ number_format($t->total, 0, ',', '.') }}</td>
+              <td>{{ $t->kasir->username ?? 'Tidak tersedia' }}</td>
             </tr>
           @empty
-            <tr><td colspan="5" class="text-center text-muted">Belum ada transaksi</td></tr>
+            <tr>
+              <td colspan="4" class="table-empty">
+                <strong>Belum ada transaksi</strong>
+                Mulai transaksi baru untuk menampilkan riwayat di sini.
+              </td>
+            </tr>
           @endforelse
         </tbody>
       </table>
     </div>
-  </div>
-</div>
+  </section>
+</section>
 @endsection
-
-@section('scripts')
-  <!-- pastikan Chart.js sudah diload sebelum ini -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-  <script>
-    document.getElementById('chartPenjualan') // harus bukan null
-
-  document.addEventListener('DOMContentLoaded', function () {
-    try {
-      const canvas = document.getElementById('chartPenjualan');
-      if (!canvas) {
-        console.warn('Chart: element #chartPenjualan tidak ditemukan.');
-        return;
-      }
-
-      const labels = @json($chart_labels ?? []);
-      const values = @json($chart_values ?? []);
-
-      if (!Array.isArray(labels) || !Array.isArray(values)) {
-        console.error('Chart: data labels/values bukan array.', { labels, values });
-        return;
-      }
-
-      // optional quick sanity: lengths should match
-      if (labels.length !== values.length) {
-        console.warn('Chart: jumlah labels dan values beda (boleh tapi cek data).', { labelsLength: labels.length, valuesLength: values.length });
-      }
-
-      // clear previous chart instance if exists (prevents duplicate charts on HMR / turbolinks)
-      if (canvas._chartInstance) {
-        canvas._chartInstance.destroy();
-        canvas._chartInstance = null;
-      }
-
-      const ctx = canvas.getContext('2d');
-
-      const config = {
-        type: 'line',
-        data: {
-          labels: labels,
-          datasets: [{
-            label: 'Total Penjualan',
-            data: values,
-            borderWidth: 3,
-            tension: 0.3,
-            fill: false,
-            pointRadius: 3,
-            pointHoverRadius: 5
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false }
-          },
-          scales: {
-            x: {
-              ticks: { maxRotation: 0, autoSkip: true }
-            },
-            y: {
-              beginAtZero: true,
-              ticks: {
-                callback: function(value) {
-                  // format angka (IDR)
-                  return 'Rp ' + value.toLocaleString('id-ID');
-                }
-              }
-            }
-          }
-        }
-      };
-
-      canvas._chartInstance = new Chart(ctx, config);
-    } catch (err) {
-      console.error('Chart init error:', err);
-    }
-  });
-  </script>
-@endsection
-

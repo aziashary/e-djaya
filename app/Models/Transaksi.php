@@ -2,14 +2,19 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
-use Illuminate\Database\Eloquent\SoftDeletes;
-
 
 class Transaksi extends Model
 {
+    public const STATUS_COMPLETED = 'selesai';
+    public const STATUS_CANCELED = 'batal';
+    public const STATUS_PENDING = 'pending';
+
+    public const PAYMENT_PENDING = 'pending';
+
     use HasFactory;
 
     protected $table = 'transaksi';
@@ -30,22 +35,40 @@ class Transaksi extends Model
     protected $casts = [
         'tanggal' => 'datetime',
     ];
-    
 
-    protected static function boot()
+    public function scopeCompleted(Builder $query): Builder
     {
-        parent::boot();
+        return $query->where('status', self::STATUS_COMPLETED);
+    }
 
-        static::creating(function ($model) {
-            $model->kode_transaksi = 'TRX-' . strtoupper(Str::random(6));
-            $model->tanggal = now();
+    public function scopePending(Builder $query): Builder
+    {
+        return $query->where('status', self::STATUS_PENDING);
+    }
+
+    public function scopeVisibleTo(Builder $query, User $user): Builder
+    {
+        $level = strtolower((string) $user->level);
+
+        if ($level === 'staff' || $level === 'kasir') {
+            $query->whereHas('kasir', fn (Builder $cashierQuery) => $cashierQuery->where('level', $level));
+        }
+
+        return $query;
+    }
+
+    protected static function booted(): void
+    {
+        static::creating(function (Transaksi $transaction) {
+            $transaction->kode_transaksi = 'TRX-' . strtoupper(Str::random(6));
+            $transaction->tanggal = now();
         });
     }
 
     public function kasir()
-{
-    return $this->belongsTo(User::class, 'kasir_id', 'id');
-}
+    {
+        return $this->belongsTo(User::class, 'kasir_id', 'id');
+    }
 
     public function items()
     {

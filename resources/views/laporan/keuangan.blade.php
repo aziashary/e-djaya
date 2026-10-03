@@ -1,215 +1,149 @@
 @extends('layouts.main')
 
-@section('judul', 'Laporan Keuangan')
+@section('judul', 'Laporan Keuangan | e-Djaya')
 
 @section('content')
-<div class="container-fluid">
-  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-    <h4 class="fw-bold mb-0">💰 Laporan Keuangan</h4>
-  </div>
+@php $isAdmin = strtolower((string) auth()->user()->level) === 'admin'; @endphp
+<section aria-labelledby="finance-title">
+  <header class="page-header">
+    <div class="page-heading">
+      <p class="page-kicker">Analisis operasional</p>
+      <h1 id="finance-title" class="page-title">Laporan keuangan</h1>
+      <p class="page-description">Bandingkan omzet dan jumlah transaksi berdasarkan periode yang dipilih.</p>
+    </div>
+  </header>
 
-  <!-- Filter -->
-  <form class="row g-2 mb-4" method="GET" action="{{ route('laporan.keuangan') }}">
-    <div class="col-md-6 col-lg-4">
-      <input type="text" id="date-range" name="daterange" value="{{ $start }} - {{ $end }}" class="form-control" placeholder="Pilih rentang tanggal" readonly>
-    </div>
-    <div class="col-md-6 col-lg-4">
-      <input type="text" name="search" value="{{ request('search') }}" class="form-control" placeholder="Cari kode transaksi atau kasir...">
-    </div>
-    <div class="col-12 col-lg-4 d-grid">
-      <button type="submit" class="btn btn-primary">
-        <i class="bx bx-search-alt"></i> Filter
-      </button>
+  <form class="card card-body mb-4" method="GET" action="{{ route('laporan.keuangan') }}">
+    <div class="row g-3 align-items-end">
+      <div class="col-lg-4">
+        <label for="date-range" class="form-label">Rentang tanggal</label>
+        <input type="text" id="date-range" value="{{ $start }} sampai {{ $end }}" class="form-control" readonly>
+        <input type="hidden" name="start_date" value="{{ $start }}">
+        <input type="hidden" name="end_date" value="{{ $end }}">
+      </div>
+      <div class="col-lg-5">
+        <label for="search" class="form-label">Kode transaksi atau kasir</label>
+        <input type="search" id="search" name="search" value="{{ request('search') }}" class="form-control" placeholder="Cari transaksi" autocomplete="off">
+      </div>
+      <div class="col-lg-3 d-grid">
+        <button type="submit" class="btn btn-primary">Tampilkan laporan</button>
+      </div>
     </div>
   </form>
 
-  <!-- Cards Summary -->
-  @if(auth()->user()->level === 'admin')
-  <div class="row mb-3">
-    <div class="col-md-4">
-      <div class="card text-center border-primary shadow-sm">
-        <div class="card-body">
-          <h6 class="text-muted">Omzet Warkop Djaya</h6>
-          <h3 class="fw-bold text-primary mb-0">Rp {{ number_format($totalNilaiWarkop, 0, ',', '.') }}</h3>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-4">
-      <div class="card text-center border-success shadow-sm">
-        <div class="card-body">
-          <h6 class="text-muted">Omzet Ranu</h6>
-          <h3 class="fw-bold text-success mb-0">Rp {{ number_format($totalNilaiRanu, 0, ',', '.') }}</h3>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-4">
-      <div class="card text-center bg-primary text-white shadow-sm">
-        <div class="card-body">
-          <h6 class="text-white">Omzet Gabungan</h6>
-          <h3 class="fw-bold mb-0">Rp {{ number_format($totalNilai, 0, ',', '.') }}</h3>
-        </div>
-      </div>
-    </div>
-  </div>
-  @endif
+  <div class="metric-grid" aria-label="Ringkasan keuangan">
+    <article class="metric-card metric-card--primary metric-card--wide">
+      <p class="metric-label">Omzet periode ini</p>
+      <p class="metric-value">Rp {{ number_format($totalNilai, 0, ',', '.') }}</p>
+      <p class="metric-note">{{ number_format($totalTransaksi, 0, ',', '.') }} transaksi tercatat</p>
+    </article>
 
-  <div class="row mb-4">
-    <div class="col-md-6 col-xl-3">
-      <div class="card text-center border-success shadow-sm">
-        <div class="card-body">
-          <h6 class="text-muted">Total Transaksi</h6>
-          <h3 class="fw-bold text-success mb-0">{{ number_format($totalTransaksi, 0, ',', '.') }}</h3>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-6 col-xl-3">
-      <div class="card text-center border-primary shadow-sm">
-        <div class="card-body">
-          <h6 class="text-muted">Nilai Transaksi</h6>
-          <h3 class="fw-bold text-primary mb-0">Rp {{ number_format($totalNilai, 0, ',', '.') }}</h3>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-6 col-xl-3">
-      <div class="card text-center border-warning shadow-sm">
-        <div class="card-body">
-          <h6 class="text-muted">Uang Cash</h6>
-          <h3 class="fw-bold text-warning mb-0">Rp {{ number_format($totalCash, 0, ',', '.') }}</h3>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-6 col-xl-3">
-      <div class="card text-center border-info shadow-sm">
-        <div class="card-body">
-          <h6 class="text-muted">Uang QRIS</h6>
-          <h3 class="fw-bold text-info mb-0">Rp {{ number_format($totalQris, 0, ',', '.') }}</h3>
-        </div>
-      </div>
-    </div>
+    @if($isAdmin)
+      <article class="metric-card">
+        <p class="metric-label">Warkop Djaya</p>
+        <p class="metric-value">Rp {{ number_format($totalNilaiWarkop, 0, ',', '.') }}</p>
+      </article>
+      <article class="metric-card">
+        <p class="metric-label">Ranu</p>
+        <p class="metric-value">Rp {{ number_format($totalNilaiRanu, 0, ',', '.') }}</p>
+      </article>
+    @else
+      <article class="metric-card">
+        <p class="metric-label">Jumlah transaksi</p>
+        <p class="metric-value">{{ number_format($totalTransaksi, 0, ',', '.') }}</p>
+      </article>
+    @endif
+
+    <article class="metric-card">
+      <p class="metric-label">Pembayaran tunai</p>
+      <p class="metric-value">Rp {{ number_format($totalCash, 0, ',', '.') }}</p>
+    </article>
+    <article class="metric-card">
+      <p class="metric-label">Pembayaran QRIS</p>
+      <p class="metric-value">Rp {{ number_format($totalQris, 0, ',', '.') }}</p>
+    </article>
   </div>
 
-  <!-- Filter info -->
-  <div class="alert alert-info d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 mb-3">
-    <div>
-      <strong>📅 Periode:</strong> 
-      {{ \Carbon\Carbon::parse($start)->translatedFormat('d F Y') }} – 
-      {{ \Carbon\Carbon::parse($end)->translatedFormat('d F Y') }}
-    </div>
+  <div class="alert alert-info mb-3" role="status">
+    <strong>Periode:</strong> {{ \Carbon\Carbon::parse($start)->translatedFormat('d F Y') }} sampai {{ \Carbon\Carbon::parse($end)->translatedFormat('d F Y') }}
     @if(request('search'))
-      <div>
-        <strong>🔍 Pencarian:</strong> "{{ request('search') }}"
-      </div>
+      <span class="d-block mt-1"><strong>Pencarian:</strong> {{ request('search') }}</span>
     @endif
   </div>
 
-  <!-- Tabel Data Transaksi -->
-  <div class="card shadow-sm">
-    <div class="card-body">
-      <h5 class="card-title mb-3">Summary Transaksi</h5>
-      <div class="table-responsive">
-        <table id="tabelRekap" class="table table-bordered table-striped align-middle w-100">
-          <thead class="table-dark">
-          <tr class="text-center">
-            <th style="width:8%;">No</th>
-            <th class="text-center">Tanggal</th>
-            <th class="text-center">Hari</th>
-            <th class="text-center">Penghasilan</th>
-            <th class="text-center">Jumlah Transaksi</th>
-          </tr>
-        </thead>
-        <tbody>
-          @forelse($rekapHarian as $i => $row)
+  <div class="card task-panel">
+    <div class="card-header">
+      <h2 class="h5 fw-bold mb-1">Rekap harian</h2>
+      <p class="small text-muted mb-0">Penghasilan dan jumlah transaksi per hari.</p>
+    </div>
+
+    @if($rekapHarian->isEmpty())
+      <div class="empty-state" role="status">
+        <strong>Tidak ada transaksi pada periode ini</strong>
+        Ubah rentang tanggal atau hapus kata pencarian untuk melihat data lain.
+      </div>
+    @else
+      <div class="table-responsive" tabindex="0" aria-label="Tabel rekap keuangan, geser jika diperlukan">
+        <table id="tabelRekap" class="table align-middle w-100">
+          <thead>
             <tr>
-              <td class="text-center">{{ $i + 1 }}</td>
-              <td class="text-center">{{ $row->tanggal_formatted }}</td>
-              <td class="text-center">{{ $row->hari }}</td>
-              <td class="text-center">Rp {{ number_format($row->penghasilan, 0, ',', '.') }}</td>
-              <td class="text-center">{{ $row->jumlah_transaksi }}</td>
+              <th scope="col">Tanggal</th>
+              <th scope="col">Hari</th>
+              <th scope="col" class="text-end">Penghasilan</th>
+              <th scope="col" class="text-end">Transaksi</th>
             </tr>
-          @empty
-            <tr>
-              <td colspan="4" class="text-center text-muted py-3">Tidak ada data untuk periode ini</td>
-            </tr>
-          @endforelse
-        </tbody>
+          </thead>
+          <tbody>
+            @foreach($rekapHarian as $row)
+              <tr>
+                <td>{{ $row->tanggal_formatted }}</td>
+                <td>{{ $row->hari }}</td>
+                <td class="text-end fw-bold">Rp {{ number_format($row->penghasilan, 0, ',', '.') }}</td>
+                <td class="text-end">{{ $row->jumlah_transaksi }}</td>
+              </tr>
+            @endforeach
+          </tbody>
         </table>
       </div>
-    </div>
+    @endif
   </div>
-</div>
-
-
-
+</section>
 @endsection
 
-@push('css')
-<!-- DataTables + Litepicker -->
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/litepicker/dist/css/litepicker.css" />
-<style>
-.litepicker { font-family: inherit; border-radius: 8px; box-shadow: 0 3px 10px rgba(0,0,0,0.1); }
-</style>
-@endpush
-
 @push('scripts')
-<!-- jQuery + DataTables + Litepicker -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/litepicker/dist/bundle.js"></script>
-
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-
-  // Litepicker
+document.addEventListener('DOMContentLoaded', () => {
+  const range = document.getElementById('date-range');
   const picker = new Litepicker({
-    element: document.getElementById('date-range'),
+    element: range,
     singleMode: false,
-    numberOfMonths: 2,
-    numberOfColumns: 2,
+    numberOfMonths: window.innerWidth < 768 ? 1 : 2,
+    numberOfColumns: window.innerWidth < 768 ? 1 : 2,
     format: 'YYYY-MM-DD',
     startDate: '{{ $start }}',
     endDate: '{{ $end }}',
     autoApply: true,
     lang: 'id-ID'
   });
-
   picker.on('selected', (startDate, endDate) => {
-    const form = document.querySelector('form');
-    const startInput = document.createElement('input');
-    const endInput = document.createElement('input');
-    startInput.type = 'hidden';
-    startInput.name = 'start_date';
-    startInput.value = startDate.format('YYYY-MM-DD');
-    endInput.type = 'hidden';
-    endInput.name = 'end_date';
-    endInput.value = endDate.format('YYYY-MM-DD');
-    form.appendChild(startInput);
-    form.appendChild(endInput);
-    form.submit();
+    document.querySelector('[name="start_date"]').value = startDate.format('YYYY-MM-DD');
+    document.querySelector('[name="end_date"]').value = endDate.format('YYYY-MM-DD');
+    range.value = `${startDate.format('YYYY-MM-DD')} sampai ${endDate.format('YYYY-MM-DD')}`;
   });
 
-  // DataTables
-  $('#tabelRekap').DataTable({
-  pageLength: 10,
-  responsive: true,
-  ordering: true,
-  order: [[1, 'desc']], // urut tanggal terbaru
-  info: false,
-  language: {
-    search: "Cari:",
-    lengthMenu: "Tampilkan _MENU_ data",
-    paginate: { previous: "Sebelumnya", next: "Berikutnya" },
-    zeroRecords: "Tidak ada data ditemukan"
-  },
-  columnDefs: [
-    { className: "text-center", targets: [0, 3] },
-    { className: "text-end", targets: [2] },
-    { orderable: true, targets: [1,2,3] }
-  ]
+  if (document.getElementById('tabelRekap')) {
+    $('#tabelRekap').DataTable({
+      pageLength: 10,
+      order: [[0, 'desc']],
+      info: false,
+      language: {
+        search: 'Cari rekap:',
+        lengthMenu: 'Tampilkan _MENU_ data',
+        paginate: { previous: 'Sebelumnya', next: 'Berikutnya' },
+        zeroRecords: 'Rekap tidak ditemukan'
+      }
+    });
+  }
 });
-
-});
-
 </script>
 @endpush

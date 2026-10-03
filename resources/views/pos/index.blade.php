@@ -1,355 +1,211 @@
-{{-- resources/views/pos/index.blade.php --}}
 @extends('layouts.pos')
 
-@section('judul', 'POS - Transaksi')
-
-@push('css')
-<style>
-/* ===== Layout ===== */
-.pos-container {
-  display: flex;
-  gap: 1rem;
-  height: calc(100vh - 180px); /* header + padding accounted in layout.pos */
-}
-.pos-left {
-  flex: 2;
-  overflow-y: auto;
-  background: #fff;
-  border-radius: 10px;
-  padding: 1.25rem;
-}
-.pos-right {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  background: #fff;
-  border-radius: 10px;
-  padding: 1.25rem;
-}
-
-/* ===== Nav / Tabs ===== */
-.nav-pills .nav-link {
-  font-weight: 600;
-  border-radius: 8px;
-}
-.nav-pills .nav-link i { font-size: 1.05rem; }
-.nav-pills .nav-link.active { box-shadow: none; }
-
-/* ===== Accordion & list ===== */
-.accordion-item {
-  border-radius: 8px;
-  overflow: hidden;
-  margin-bottom: 0.5rem;
-  border: 1px solid #ececec;
-}
-.accordion-button {
-  background-color: #fafafa;
-  font-weight: 600;
-}
-.accordion-button:not(.collapsed) {
-  color: #0d6efd;
-  background-color: #eef5ff;
-}
-.list-group-item-action {
-  padding: .55rem .9rem;
-  cursor: pointer;
-}
-.list-group-item-action .price {
-  min-width: 90px;
-  text-align: right;
-}
-
-/* ===== Cart ===== */
-.cart-body { flex: 1; overflow-y: auto; }
-.cart-footer { border-top: 1px solid #eee; padding-top: 1rem; }
-
-/* btn-pay custom color */
-.btn-pay {
-  background-color: #af3f3f !important;
-  border-color: #af3f3f !important;
-  color: #fff !important;
-  font-weight: 600;
-  width: 100%;
-}
-.btn-pay:hover { background-color: #922e2e !important; border-color: #922e2e !important; }
-
-/* disabled style */
-.btn-pay.btn-disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-  background-color: #aaa !important;
-  border-color: #aaa !important;
-}
-
-/* minus small btn */
-.btn-dec {
-  width: 28px;
-  height: 28px;
-  padding: 0;
-  line-height: 1;
-  font-size: 1rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-}
-
-/* search box style */
-#search-barang { border-radius: 8px; }
-
-/* mobile tweaks */
-@media (max-width: 991px) {
-  .pos-container { flex-direction: column; height: auto; }
-  .pos-left, .pos-right { height: auto; }
-}
-</style>
-@endpush
+@section('judul', 'Transaksi Baru | e-Djaya')
 
 @section('content')
-<div class="container-fluid py-2">
-  <div class="pos-container">
+@if($openBill)
+  <div class="alert alert-warning d-flex flex-wrap align-items-center justify-content-between gap-2" role="status">
+    <span>
+      <strong>Open bill {{ $openBill['kode'] }}</strong>
+      untuk {{ $openBill['nama_customer'] }} sedang diedit.
+    </span>
+    <a href="{{ route('pos.open-bills') }}" class="btn btn-sm btn-outline-secondary">Kembali ke daftar</a>
+  </div>
+@endif
 
-    {{-- LEFT: Search + Tabs + Accordion --}}
-    <div class="pos-left">
-      <div class="d-flex align-items-center justify-content-between mb-3">
-         <h5 class="fw-bold mb-0">💰{{ Auth::user()->level === 'staff' ? 'Kasir Ranu' : 'Kasir e-Warkop Djaya' }}</h5>
+<div class="pos-container">
+  <section class="pos-left" aria-labelledby="catalog-title">
+    <header>
+      <h2 id="catalog-title" class="pos-section-title">Pilih produk</h2>
+      <p class="pos-section-copy">Cari produk, lalu pilih untuk menambahkannya ke keranjang.</p>
+    </header>
+
+    <div class="product-search">
+      <label for="search-barang" class="visually-hidden">Cari produk</label>
+      <div class="input-group">
+        <span class="input-group-text" aria-hidden="true"><i class="bx bx-search"></i></span>
+        <input type="search" id="search-barang" class="form-control" placeholder="Cari nama produk" autocomplete="off">
       </div>
+    </div>
 
-      {{-- Search --}}
-      <div class="mb-3">
-        <div class="input-group">
-          <span class="input-group-text bg-white"><i class="bx bx-search"></i></span>
-          <input type="text" id="search-barang" class="form-control" placeholder="Cari Produk">
-        </div>
+    @if($data->isEmpty())
+      <div class="empty-state" role="status">
+        <strong>Belum ada produk aktif</strong>
+        Aktifkan atau tambahkan produk agar transaksi dapat dimulai.
       </div>
-
-      {{-- Tabs per deskripsi --}}
+    @else
       <div class="nav-align-top">
-        <ul class="nav nav-pills mb-3 nav-fill" role="tablist" id="deskripsiTabs">
+        <ul class="nav nav-pills mb-3" role="tablist" id="deskripsiTabs" aria-label="Jenis produk">
           @foreach($data as $deskripsi => $kategoriGroup)
-            @php
-              $desKey = Str::slug($deskripsi);
-              $desIcons = [
-                'makanan' => 'bx bx-bowl-hot text-danger',
-                'minuman' => 'bx bx-drink text-primary',
-              ];
-              $icon = $desIcons[strtolower($deskripsi)] ?? 'bx bx-category-alt text-muted';
-            @endphp
-
-            <li class="nav-item mb-1 mb-sm-0" role="presentation">
-              <button
-                type="button"
-                class="nav-link {{ $loop->first ? 'active' : '' }}"
-                role="tab"
-                data-bs-toggle="tab"
-                data-bs-target="#tab-{{ $desKey }}"
-                aria-controls="tab-{{ $desKey }}"
-                aria-selected="{{ $loop->first ? 'true' : 'false' }}">
-                <span class="d-none d-sm-inline-flex align-items-center">
-                  <i class="{{ $icon }} me-2"></i> {{ ucfirst($deskripsi) }}
-                </span>
-                <i class="{{ $icon }} d-sm-none"></i>
+            @php $desKey = Str::slug($deskripsi); @endphp
+            <li class="nav-item flex-grow-1" role="presentation">
+              <button type="button" class="nav-link w-100 {{ $loop->first ? 'active' : '' }}" role="tab" data-bs-toggle="tab" data-bs-target="#tab-{{ $desKey }}" aria-controls="tab-{{ $desKey }}" aria-selected="{{ $loop->first ? 'true' : 'false' }}">
+                {{ ucfirst($deskripsi) }}
               </button>
             </li>
           @endforeach
         </ul>
 
-        <div class="tab-content">
+        <div class="tab-content p-0 bg-transparent shadow-none">
           @foreach($data as $deskripsi => $kategoriGroup)
             @php $desKey = Str::slug($deskripsi); @endphp
             <div class="tab-pane fade {{ $loop->first ? 'show active' : '' }}" id="tab-{{ $desKey }}" role="tabpanel">
-              {{-- Accordion for categories inside this deskripsi --}}
               <div class="accordion" id="accordion-{{ $desKey }}">
                 @foreach($kategoriGroup as $kategori => $items)
                   @php
                     $catKey = Str::slug($deskripsi . '-' . ($kategori ?: 'tanpa'));
-
-                    // pilih ikon kategori
-                    $catIcons = [
-                      'kopi hitam' => 'bx bx-coffee',
-                      'kopi susu' => 'bx bx-coffee',
-                      'teh' => 'bx bx-leaf',
-                      'susu' => 'bx bx-cup',
-                      'pisang bakar' => 'bx bx-pen',
-                      'pisang goreng' => 'bx bx-pen',
-                      'rotbak' => 'bx bx-baguette',
-                      'rotbak mini' => 'bx bx-baguette',
-                      'dimsum' => 'bx bx-sushi',
-                      'mie goreng' => 'bx bx-bowl-hot',
-                      'mie rebus' => 'bx bx-bowl-hot',
-                      'mie lainnya' => 'bx bx-bowl-hot',
-                      'lainnya minuman' => 'bx bx-drink',
-                      'Ranu' => 'bx bx-coffee',
-                      'lainnya makanan' => 'bx bx-dish',
-                      'default' => 'bx bx-dish',
-                    ];
-
-                    $catIcon = $catIcons[strtolower($kategori)] ?? $catIcons['default'];
-                    $badgeCount = $items->count();
-
                     if (strtolower($deskripsi) === 'minuman') {
-                        $items = $items->sortBy(fn($b) => strtolower($b->nama ?? $b->nama_barang));
+                      $items = $items->sortBy(fn($b) => strtolower($b->nama ?? $b->nama_barang));
                     }
                   @endphp
 
-
-                  <div class="accordion-item">
-                    <h2 class="accordion-header" id="heading-{{ $catKey }}">
-                      <button
-                        class="accordion-button collapsed"
-                        type="button"
-                        data-bs-toggle="collapse"
-                        data-bs-target="#collapse-{{ $catKey }}"
-                        aria-expanded="false"
-                        aria-controls="collapse-{{ $catKey }}">
-                        <i class="{{ $catIcon }} me-2"></i> {{ $kategori ?? 'Tanpa Kategori' }}
-                        {{-- <span class="badge bg-light text-muted ms-2">{{ $badgeCount }}</span> --}}
+                  <div class="accordion-item mb-2">
+                    <h3 class="accordion-header" id="heading-{{ $catKey }}">
+                      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ $catKey }}" aria-expanded="false" aria-controls="collapse-{{ $catKey }}">
+                        <span>{{ $kategori ?? 'Tanpa kategori' }}</span>
+                        <span class="badge bg-label-primary ms-2">{{ $items->count() }} produk</span>
                       </button>
-                    </h2>
+                    </h3>
 
                     <div id="collapse-{{ $catKey }}" class="accordion-collapse collapse" data-bs-parent="#accordion-{{ $desKey }}">
                       <div class="accordion-body p-0">
                         <div class="list-group list-group-flush">
-                          @foreach($items as $b)
-                            {{-- Ensure name attribute fallback (nama or nama_barang) --}}
-                            @php $barangNama = $b->nama ?? $b->nama_barang ?? 'Tanpa Nama'; @endphp
-                            <a href="javascript:void(0);"
-                               class="list-group-item list-group-item-action d-flex justify-content-between align-items-center add-item"
-                               data-id="{{ $b->id }}"
-                               data-nama="{{ e($barangNama) }}"
-                               data-harga="{{ $b->harga_jual }}">
-                              <div>
-                                <div class="fw-semibold">{{ $barangNama }}</div>
+                          @forelse($items as $b)
+                            @php $barangNama = $b->nama ?? $b->nama_barang ?? 'Tanpa nama'; @endphp
+                            <button type="button" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center gap-3 add-item text-start" data-id="{{ $b->id }}" data-nama="{{ e($barangNama) }}" data-harga="{{ $b->harga_jual }}" aria-label="Tambah {{ $barangNama }}, harga Rp {{ number_format($b->harga_jual, 0, ',', '.') }}">
+                              <span class="min-w-0">
+                                <span class="fw-semibold d-block">{{ $barangNama }}</span>
                                 @if(isset($b->stok))
-                                  <small class="text-muted">Stok: {{ $b->stok }}</small>
+                                  <small class="text-muted">Stok {{ $b->stok }}</small>
                                 @endif
-                              </div>
-                              <div class="price text-muted small">Rp {{ number_format($b->harga_jual) }}</div>
-                            </a>
-                          @endforeach
+                              </span>
+                              <span class="product-price text-nowrap fw-bold">Rp {{ number_format($b->harga_jual, 0, ',', '.') }}</span>
+                            </button>
+                          @empty
+                            <p class="empty-state mb-0">Tidak ada produk aktif pada kategori ini.</p>
+                          @endforelse
                         </div>
                       </div>
                     </div>
                   </div>
-
                 @endforeach
               </div>
             </div>
           @endforeach
         </div>
       </div>
+    @endif
+
+    <div id="search-empty" class="empty-state" role="status" hidden>
+      <strong>Produk tidak ditemukan</strong>
+      Coba kata pencarian lain atau pilih jenis produk yang berbeda.
     </div>
+  </section>
 
-    <!-- KANAN: Keranjang -->
-  <div class="pos-right">
-    <h5 class="fw-bold mb-3">Keranjang</h5>
+  <aside class="pos-right" aria-labelledby="cart-title">
+    <header>
+      <h2 id="cart-title" class="pos-section-title">Keranjang</h2>
+      <p class="pos-section-copy" id="cart-summary">Belum ada produk dipilih.</p>
+    </header>
 
-    <div class="cart-body">
-      <table class="table table-sm">
-        <thead>
-          <tr>
-            <th>Produk</th>
-            <th class="text-center">Qty</th>
-            <th class="text-end">Subtotal</th>
-          </tr>
-        </thead>
-        <tbody id="cart-items">
-          <tr><td colspan="3" class="text-center text-muted">Belum ada item</td></tr>
-        </tbody>        
-      </table>
-    </div>
-
-    <div class="cart-footer mt-auto">
-      <div class="d-flex justify-content-between mb-2">
-        <span>Subtotal</span>
-        <strong id="cart-subtotal">Rp 0</strong>
+    <div class="cart-body mt-3">
+      <div class="table-responsive">
+        <table class="table table-sm align-middle">
+          <thead>
+            <tr>
+              <th scope="col">Produk</th>
+              <th scope="col" class="text-center">Jumlah</th>
+              <th scope="col" class="text-end">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody id="cart-items" aria-live="polite"></tbody>
+        </table>
       </div>
-      <button class="btn btn-pay btn-pay-main btn-disabled" type="button" id="btn-open-bayar" disabled>
-            <i class="bx bx-check-circle me-1"></i> Bayarin
-      </button>
     </div>
-  </div>
-</div>
+
+    <div class="cart-footer">
+      <div class="cart-total-row">
+        <span>Subtotal</span>
+        <strong id="cart-subtotal" class="cart-total">Rp 0</strong>
+      </div>
+      <div class="d-grid gap-2">
+        <button class="btn btn-outline-primary btn-disabled" type="button" id="btn-open-bill" disabled>
+          {{ $openBill ? 'Simpan perubahan bill' : 'Simpan open bill' }}
+        </button>
+        <button class="btn btn-pay btn-disabled" type="button" id="btn-open-bayar" disabled>
+          Lanjut ke pembayaran
+        </button>
+      </div>
+    </div>
+  </aside>
 </div>
 
-{{-- Modal Pembayaran (single modal used for both Rayab and Pay&Print) --}}
 <div class="modal fade" id="modalBayar" tabindex="-1" aria-labelledby="modalBayarLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-lg">
+  <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title fw-bold" id="modalBayarLabel"><i class="bx bx-wallet-alt me-2 text-success"></i> Pembayaran</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <div>
+          <h2 class="modal-title fs-5 fw-bold" id="modalBayarLabel">Detail transaksi</h2>
+          <p class="mb-0 text-muted small">Lengkapi data pesanan, lalu simpan sebagai open bill atau selesaikan pembayaran.</p>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup dialog pembayaran"></button>
       </div>
 
       <div class="modal-body">
-        <div class="text-center mb-4">
-          <h6 class="text-muted mb-0">Total Pembayaran</h6>
-          <h2 class="fw-bolder" id="modal-total">Rp 0</h2>
+        <div class="payment-total mb-4">
+          <span>Total pembayaran</span>
+          <strong id="modal-total">Rp 0</strong>
         </div>
 
-        <form id="formPembayaran" autocomplete="off">
+        <div id="payment-feedback" class="alert alert-danger" role="alert" tabindex="-1" hidden></div>
+
+        <form id="formPembayaran" autocomplete="off" data-no-loading="true">
           <div class="row g-3">
-            <div class="col-md-3">
-              <label for="nama_customer" class="form-label fw-semibold">Nama Cust</label>
-              <input type="text" class="form-control" id="nama_customer">
+            <div class="col-md-6">
+              <label for="nama_customer" class="form-label">Nama pelanggan atau meja</label>
+              <input type="text" class="form-control" id="nama_customer" name="nama_customer" placeholder="Wajib untuk open bill" autocomplete="off" value="{{ $openBill['nama_customer'] ?? '' }}">
             </div>
 
-            <div class="col-md-3">
-              <label for="makan_dimana" class="form-label">Makan Di Mana</label>
+            <div class="col-md-6">
+              <label for="makan_dimana" class="form-label">Jenis pesanan</label>
               <select name="makan_dimana" id="makan_dimana" class="form-select">
-                <option value="Dine in">Dine In</option>
-                <option value="Takeaway">Take Away</option>
+                <option value="Dine in">Makan di tempat</option>
+                <option value="Takeaway">Dibawa pulang</option>
               </select>
             </div>
 
-            <div class="col-md-6">
-              <label for="catatan" class="form-label fw-semibold">Catatan</label>
-              <input type="text" class="form-control" id="catatan">
-            </div>
-          </div>
-
-          <div class="row g-3">
-            <div class="col-md-6"> 
-              <label for="diskon" class="form-label fw-semibold">Diskon (%)</label>
-              <input type="number" class="form-control" id="diskon" value="0" min="0" max="100" step="0.1">
+            <div class="col-12">
+              <label for="catatan" class="form-label">Catatan pesanan</label>
+              <input type="text" class="form-control" id="catatan" name="catatan" placeholder="Contoh: tanpa gula" autocomplete="off">
             </div>
 
             <div class="col-md-6">
-              <label for="metode" class="form-label fw-semibold">Metode Pembayaran</label>
-              <select id="metode" class="form-select">
-                <option value="cash">Cash</option>
-                <option value="qris">Qris</option>
+              <label for="diskon" class="form-label">Diskon</label>
+              <div class="input-group">
+                <input type="number" class="form-control" id="diskon" name="diskon" value="0" min="0" max="100" step="0.1" inputmode="decimal">
+                <span class="input-group-text">%</span>
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <label for="metode" class="form-label">Metode pembayaran</label>
+              <select id="metode" name="metode_pembayaran" class="form-select">
+                <option value="cash">Tunai</option>
+                <option value="qris">QRIS</option>
               </select>
             </div>
           </div>
-
-          <!-- <div id="cash-section" class="mt-4" style="display:none;">
-            <div class="row g-3">
-              <div class="col-md-6">
-                <label for="uang-diterima" class="form-label fw-semibold">Uang Diterima</label>
-                <input type="number" class="form-control" id="uang-diterima" placeholder="Masukkan jumlah uang">
-              </div>
-              <div class="col-md-6">
-                <label for="kembalian" class="form-label fw-semibold">Kembalian</label>
-                <input type="text" class="form-control" id="kembalian" readonly>
-              </div>
-            </div>
-          </div> -->
         </form>
       </div>
 
-      <div class="modal-footer d-flex justify-content-between align-items-center flex-wrap">
-        <div class="d-flex gap-2">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="bx bx-x"></i> Batal</button>
-          <button type="button" class="btn text-white" id="btn-rayab" style="background-color:#af3f3f; border-color:#af3f3f;">
-            <i class="bx bx-receipt"></i> Rayab doang
+      <div class="modal-footer justify-content-between">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
+        <div class="d-flex flex-wrap gap-2">
+          <button type="button" class="btn btn-outline-primary" id="btn-save-open-bill">
+            {{ $openBill ? 'Simpan perubahan' : 'Simpan open bill' }}
           </button>
-        </div>
-
-        <div>
-          <button type="button" class="btn btn-success" id="btn-konfirmasi-bayar">
-            <i class="bx bx-printer"></i> Pay & Print
-          </button>
+          <button type="button" class="btn btn-outline-primary" id="btn-bayar-tanpa-cetak">Bayar tanpa cetak</button>
+          <button type="button" class="btn btn-primary" id="btn-konfirmasi-bayar">Bayar dan cetak</button>
         </div>
       </div>
     </div>
@@ -359,105 +215,34 @@
 
 @push('scripts')
 <script>
-/*
-  POS frontend logic
-  - cart: array of items {id, nama, harga, qty}
-  - add-item: add or increment
-  - decrement: decrement and remove if qty = 0
-  - renderCart: re-render cart and subtotal, toggle pay button
-  - payment modal: show totals, handle discount & cash calculation
-  - submit via AJAX to route('pos.transaksi.store')
-*/
+const formatRupiah = (value) => `Rp ${Number(value || 0).toLocaleString('id-ID')}`;
+const openBill = @json($openBill);
+const checkoutUrl = @json(route('pos.transaksi.store'));
+const openBillStoreUrl = @json(route('pos.open-bills.store'));
+const openBillUpdateUrl = @json($openBill ? route('pos.open-bills.update', $openBill['kode']) : null);
+const openBillSettleUrl = @json($openBill ? route('pos.open-bills.settle', $openBill['kode']) : null);
+const openBillsUrl = @json(route('pos.open-bills'));
+const successBaseUrl = @json(url('/pos/sukses'));
+const printBaseUrl = @json(url('/pos/print'));
+const fullscreenStateKey = 'edjaya-pos-fullscreen-cart';
+let restoredFullscreenState = null;
 
-/* ---------- Helpers ---------- */
-function numberToRupiah(n) {
-  if (!n) return 'Rp 0';
-  return 'Rp ' + n.toLocaleString('id-ID');
+try {
+  const savedState = JSON.parse(sessionStorage.getItem(fullscreenStateKey) || 'null');
+  if (savedState?.url === window.location.href && savedState?.state) {
+    restoredFullscreenState = savedState.state;
+    sessionStorage.removeItem(fullscreenStateKey);
+  }
+} catch (error) {
+  sessionStorage.removeItem(fullscreenStateKey);
 }
 
-/* ---------- State ---------- */
-let cart = [];
+let cart = restoredFullscreenState?.cart
+  ? [...restoredFullscreenState.cart]
+  : (openBill?.items ? [...openBill.items] : []);
 
-/* ---------- Add item handler (delegated) ---------- */
-$(document).on('click', '.add-item', function(e) {
-  e.preventDefault();
-  const $el = $(this);
-  const id = $el.data('id');
-  const nama = $el.data('nama');
-  const harga = parseInt($el.data('harga')) || 0;
-
-  const existing = cart.find(i => i.id == id);
-  if (existing) {
-    existing.qty += 1;
-  } else {
-    cart.push({ id, nama, harga, qty: 1 });
-  }
-  renderCart();
-});
-
-/* ---------- Render cart ---------- */
-function renderCart() {
-  const $tbody = $('#cart-items');
-  $tbody.empty();
-
-  if (cart.length === 0) {
-    $tbody.append('<tr><td colspan="3" class="text-center text-muted py-4">Belum ada item</td></tr>');
-    $('#cart-subtotal').text('Rp 0');
-    togglePayButton(false);
-    return;
-  }
-
-  let subtotal = 0;
-  cart.forEach(item => {
-    const sub = item.harga * item.qty;
-    subtotal += sub;
-
-    $tbody.append(`
-      <tr data-id="${item.id}">
-        <td>
-          <div class="fw-semibold">${escapeHtml(item.nama)}</div>
-        </td>
-        <td class="text-center align-middle">
-          <div class="d-inline-flex align-items-center justify-content-center">
-            <button class="btn btn-sm btn-outline-danger btn-dec me-2" data-id="${item.id}" title="Kurangi jumlah">−</button>
-            <span class="fw-semibold mx-1">${item.qty}</span>
-          </div>
-        </td>
-        <td class="text-end align-middle">Rp ${sub.toLocaleString('id-ID')}</td>
-      </tr>
-    `);
-  });
-
-  $('#cart-subtotal').text('Rp ' + subtotal.toLocaleString('id-ID'));
-  togglePayButton(true);
-}
-
-/* ---------- Toggle pay button ---------- */
-function togglePayButton(enable) {
-  const $btn = $('#btn-open-bayar');
-  if (enable) {
-    $btn.prop('disabled', false).removeClass('btn-disabled');
-  } else {
-    $btn.prop('disabled', true).addClass('btn-disabled');
-  }
-}
-
-/* ---------- Decrement listener ---------- */
-$(document).on('click', '.btn-dec', function(e) {
-  e.preventDefault();
-  const id = $(this).data('id');
-  const idx = cart.findIndex(i => i.id == id);
-  if (idx === -1) return;
-  cart[idx].qty -= 1;
-  if (cart[idx].qty <= 0) {
-    cart.splice(idx, 1);
-  }
-  renderCart();
-});
-
-/* ---------- Escape HTML helper (avoid XSS when injecting nama) ---------- */
-function escapeHtml(str) {
-  return String(str)
+function escapeHtml(value) {
+  return String(value)
     .replace(/&/g, '&amp;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;')
@@ -465,184 +250,245 @@ function escapeHtml(str) {
     .replace(/>/g, '&gt;');
 }
 
-/* ---------- Search logic (smart: opens relevant accordions) ---------- */
-$('#search-barang').on('input', function() {
-  const q = $(this).val().toLowerCase().trim();
+function setPaymentBusy(isBusy) {
+  [
+    document.getElementById('btn-save-open-bill'),
+    document.getElementById('btn-bayar-tanpa-cetak'),
+    document.getElementById('btn-konfirmasi-bayar')
+  ].forEach((button) => {
+    button.disabled = isBusy;
+    button.setAttribute('aria-busy', String(isBusy));
+  });
+}
 
-  if (q === '') {
-    // show all and close all accordion
-    $('.list-group-item').show();
-    $('.accordion-collapse').collapse('hide');
-    $('#no-result').remove();
+function showPaymentError(message) {
+  const feedback = document.getElementById('payment-feedback');
+  feedback.textContent = message;
+  feedback.hidden = false;
+  feedback.focus();
+}
+
+function renderCart() {
+  const tbody = document.getElementById('cart-items');
+  const summary = document.getElementById('cart-summary');
+  tbody.innerHTML = '';
+
+  if (cart.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="3" class="table-empty"><strong>Keranjang masih kosong</strong>Pilih produk dari daftar untuk memulai transaksi.</td></tr>';
+    document.getElementById('cart-subtotal').textContent = 'Rp 0';
+    summary.textContent = 'Belum ada produk dipilih.';
+    toggleCartActions(false);
     return;
   }
 
-  // hide all first and close all
-  $('.list-group-item').hide();
-  $('.accordion-collapse').collapse('hide');
-
-  let found = false;
-  $('.list-group-item').each(function() {
-    const txt = $(this).text().toLowerCase();
-    if (txt.includes(q)) {
-      found = true;
-      $(this).show();
-
-      // open category accordion that contains this item
-      const $collapse = $(this).closest('.accordion-collapse');
-      if ($collapse.length) {
-        $collapse.collapse('show');
-        $collapse.prev().find('.accordion-button').removeClass('collapsed');
-      }
-    }
+  let subtotal = 0;
+  cart.forEach((item) => {
+    const itemSubtotal = item.harga * item.qty;
+    subtotal += itemSubtotal;
+    tbody.insertAdjacentHTML('beforeend', `
+      <tr data-id="${item.id}">
+        <td><span class="fw-semibold">${escapeHtml(item.nama)}</span></td>
+        <td class="text-center">
+          <div class="d-inline-flex align-items-center gap-2">
+            <button type="button" class="btn btn-sm btn-outline-danger btn-dec" data-id="${item.id}" aria-label="Kurangi ${escapeHtml(item.nama)}">−</button>
+            <span class="fw-bold" aria-label="Jumlah ${item.qty}">${item.qty}</span>
+          </div>
+        </td>
+        <td class="text-end fw-bold">${formatRupiah(itemSubtotal)}</td>
+      </tr>
+    `);
   });
 
-  if (!found) {
-    if ($('#no-result').length === 0) {
-      $('.pos-left').append('<p id="no-result" class="text-center text-muted mt-3">Barang tidak ditemukan 😅</p>');
-    }
-  } else {
-    $('#no-result').remove();
-  }
-});
+  document.getElementById('cart-subtotal').textContent = formatRupiah(subtotal);
+  summary.textContent = `${cart.reduce((total, item) => total + item.qty, 0)} item dalam keranjang.`;
+  toggleCartActions(true);
+}
 
-/* ---------- Payment modal flow ---------- */
-$('#btn-open-bayar').on('click', function() {
-  // compute subtotal
-  let subtotal = cart.reduce((acc, it) => acc + (it.harga * it.qty), 0);
-  $('#diskon').val(0);
-  $('#uang-diterima').val('');
-  $('#kembalian').val('');
-  $('#modal-total').text(numberToRupiah(subtotal));
-  $('#modalBayar').modal('show');
-  // default method hide cash section
-  $('#cash-section').hide();
-  $('#metode').val('cash');
-});
-
-/* change metode */
-// $('#metode').on('change', function() {
-//   if ($(this).val() === 'cash') {
-//     $('#cash-section').slideDown();
-//   } else {
-//     $('#cash-section').slideUp();
-//     $('#uang-diterima').val('');
-//     $('#kembalian').val('');
-//   }
-// });
-
-/* recalc when diskon or uang diterima changes */
-$('#diskon, #uang-diterima').on('input', function() {
-  updatePaymentPreview();
-});
+function toggleCartActions(enabled) {
+  ['btn-open-bill', 'btn-open-bayar'].forEach((id) => {
+    const button = document.getElementById(id);
+    button.disabled = !enabled;
+    button.classList.toggle('btn-disabled', !enabled);
+  });
+}
 
 function updatePaymentPreview() {
-  let subtotal = cart.reduce((acc, it) => acc + (it.harga * it.qty), 0);
-  let diskonPerc = parseFloat($('#diskon').val()) || 0;
-  diskonPerc = Math.max(0, Math.min(diskonPerc, 100));
-  let totalSetelahDiskon = subtotal - (subtotal * diskonPerc / 100);
-  $('#modal-total').text(numberToRupiah(totalSetelahDiskon));
-
-  if ($('#metode').val() === 'cash') {
-    let uang = parseInt($('#uang-diterima').val()) || 0;
-    let kembalian = uang - totalSetelahDiskon;
-    $('#kembalian').val(kembalian > 0 ? numberToRupiah(kembalian) : 'Rp 0');
-  } else {
-    $('#kembalian').val('');
-  }
+  const subtotal = cart.reduce((total, item) => total + (item.harga * item.qty), 0);
+  const discount = Math.max(0, Math.min(Number(document.getElementById('diskon').value) || 0, 100));
+  document.getElementById('modal-total').textContent = formatRupiah(subtotal - (subtotal * discount / 100));
 }
 
-/* ---------- AJAX submit logic ---------- */
 function buildPayload() {
-  const subtotal = cart.reduce((acc, it) => acc + (it.harga * it.qty), 0);
-  const diskonPerc = parseFloat($('#diskon').val()) || 0;
-  const total = subtotal - (subtotal * diskonPerc / 100);
-  const metode = $('#metode').val();
-  const nama_customer = $('#nama_customer').val();
-  const makan_dimana = $('#makan_dimana').val();
-  const catatan = $('#catatan').val()?.trim() || '';
+  const subtotal = cart.reduce((total, item) => total + (item.harga * item.qty), 0);
+  const discount = Math.max(0, Math.min(Number(document.getElementById('diskon').value) || 0, 100));
 
-  const items = cart.map(it => ({
-    barang_id: it.id,
-    nama: it.nama,
-    harga: it.harga,
-    qty: it.qty,
-    subtotal: it.harga * it.qty
-  }));
-
-  return { subtotal, diskon: diskonPerc, total, metode_pembayaran: metode, nama_customer, makan_dimana, catatan, items };
+  return {
+    subtotal,
+    diskon: discount,
+    total: subtotal - (subtotal * discount / 100),
+    metode_pembayaran: document.getElementById('metode').value,
+    nama_customer: document.getElementById('nama_customer').value.trim(),
+    makan_dimana: document.getElementById('makan_dimana').value,
+    catatan: document.getElementById('catatan').value.trim(),
+    items: cart.map((item) => ({
+      barang_id: item.id,
+      nama: item.nama,
+      harga: item.harga,
+      qty: item.qty,
+      subtotal: item.harga * item.qty
+    }))
+  };
 }
 
-function submitTransaction(isPrint) {
-  const payload = buildPayload();
-
-  if (payload.items.length === 0) {
-    alert('Keranjang kosong');
-    return;
-  }
-
-  // // validasi uang kalau cash
-  // if (payload.metode_pembayaran === 'cash') {
-  //   const uang = parseInt($('#uang-diterima').val()) || 0;
-  //   if (uang < payload.total) {
-  //     alert('Uang diterima kurang dari total pembayaran');
-  //     return;
-  //   }
-  // }
+function requestTransaction(url, method, payload, onSuccess) {
+  document.getElementById('payment-feedback').hidden = true;
+  setPaymentBusy(true);
 
   $.ajax({
-    url: "{{ route('pos.transaksi.store') }}",
-    method: 'POST',
-    data: {
-      _token: "{{ csrf_token() }}",
-      subtotal: payload.subtotal,
-      diskon: payload.diskon,
-      total: payload.total,
-      metode_pembayaran: payload.metode_pembayaran,
-      nama_customer: payload.nama_customer,
-      makan_dimana: payload.makan_dimana,
-      catatan: payload.catatan,
-      items: payload.items
-    },
-    success: function(res) {
-      if (res.success && res.kode_transaksi) {
-        // reset modal & keranjang
-        $('#modalBayar').modal('hide');
-        cart = [];
-        renderCart();
-
-        if (isPrint) {
-          // buka tab print kalau tombol "Bayar & Cetak", set copies = 2
-          window.open("{{ url('/pos/print') }}/" + res.kode_transaksi + "?copies=2", "_blank");
-        }
-
-        // redirect ke halaman sukses
-        window.location.href = "{{ url('/pos/sukses') }}/" + res.kode_transaksi;
-      } else {
-        alert('Gagal menyimpan transaksi.');
+    url,
+    method,
+    data: { _token: @json(csrf_token()), ...payload },
+    success: (response) => {
+      if (!response.success || !response.kode_transaksi) {
+        showPaymentError(response.message || 'Transaksi tidak dapat disimpan. Coba lagi.');
+        setPaymentBusy(false);
+        return;
       }
+
+      onSuccess(response);
     },
-    error: function(xhr) {
-      console.error(xhr);
-      alert('Terjadi error saat menyimpan transaksi.');
+    error: (xhr) => {
+      showPaymentError(xhr.responseJSON?.message || 'Transaksi gagal disimpan. Periksa koneksi dan coba lagi.');
+      setPaymentBusy(false);
     }
   });
 }
 
+function saveOpenBill() {
+  const payload = buildPayload();
+  if (payload.items.length === 0) {
+    showPaymentError('Keranjang masih kosong. Pilih setidaknya satu produk.');
+    return;
+  }
+  if (!payload.nama_customer) {
+    showPaymentError('Isi nama pelanggan atau meja sebelum menyimpan open bill.');
+    document.getElementById('nama_customer').focus();
+    return;
+  }
 
-/* Rayab doang (simpan tanpa print) */
-$('#btn-rayab').on('click', function() {
-  submitTransaction(false);
-});
+  requestTransaction(
+    openBill ? openBillUpdateUrl : openBillStoreUrl,
+    openBill ? 'PUT' : 'POST',
+    payload,
+    () => {
+      window.location.href = openBillsUrl;
+    }
+  );
+}
 
-/* Pay & Print */
-$('#btn-konfirmasi-bayar').on('click', function() {
-  submitTransaction(true);
-});
+function submitTransaction(shouldPrint) {
+  const payload = buildPayload();
+  if (payload.items.length === 0) {
+    showPaymentError('Keranjang masih kosong. Pilih setidaknya satu produk.');
+    return;
+  }
 
-/* initialize */
-$(function() {
+  requestTransaction(
+    openBill ? openBillSettleUrl : checkoutUrl,
+    'POST',
+    payload,
+    (response) => {
+      bootstrap.Modal.getOrCreateInstance(document.getElementById('modalBayar')).hide();
+      if (shouldPrint) {
+        window.open(`${printBaseUrl}/${response.kode_transaksi}?copies=2`, '_blank');
+      }
+      window.location.href = `${successBaseUrl}/${response.kode_transaksi}`;
+    }
+  );
+}
+
+function openTransactionDetails() {
+  document.getElementById('payment-feedback').hidden = true;
+  updatePaymentPreview();
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('modalBayar')).show();
+}
+
+$(document).on('click', '.add-item', function() {
+  const id = $(this).data('id');
+  const existing = cart.find((item) => item.id == id);
+  if (existing) {
+    existing.qty += 1;
+  } else {
+    cart.push({
+      id,
+      nama: $(this).data('nama'),
+      harga: Number($(this).data('harga')) || 0,
+      qty: 1
+    });
+  }
   renderCart();
 });
+
+$(document).on('click', '.btn-dec', function() {
+  const index = cart.findIndex((item) => item.id == $(this).data('id'));
+  if (index < 0) return;
+  cart[index].qty -= 1;
+  if (cart[index].qty <= 0) cart.splice(index, 1);
+  renderCart();
+});
+
+$('#search-barang').on('input', function() {
+  const query = this.value.toLowerCase().trim();
+  let found = false;
+  $('.list-group-item-action').each(function() {
+    const matches = !query || this.textContent.toLowerCase().includes(query);
+    this.hidden = !matches;
+    if (matches) {
+      found = true;
+      if (query) {
+        bootstrap.Collapse.getOrCreateInstance($(this).closest('.accordion-collapse')[0], { toggle: false }).show();
+      }
+    }
+  });
+  document.getElementById('search-empty').hidden = found;
+});
+
+if (openBill) {
+  document.getElementById('nama_customer').value = openBill.nama_customer || '';
+  document.getElementById('makan_dimana').value = openBill.makan_dimana || 'Dine in';
+  document.getElementById('catatan').value = openBill.catatan || '';
+  document.getElementById('diskon').value = openBill.diskon || 0;
+}
+
+if (restoredFullscreenState?.fields) {
+  document.getElementById('nama_customer').value = restoredFullscreenState.fields.nama_customer || '';
+  document.getElementById('makan_dimana').value = restoredFullscreenState.fields.makan_dimana || 'Dine in';
+  document.getElementById('catatan').value = restoredFullscreenState.fields.catatan || '';
+  document.getElementById('diskon').value = restoredFullscreenState.fields.diskon || 0;
+  document.getElementById('metode').value = restoredFullscreenState.fields.metode_pembayaran || 'cash';
+}
+
+window.getPosFullscreenState = () => ({
+  cart,
+  fields: {
+    nama_customer: document.getElementById('nama_customer').value,
+    makan_dimana: document.getElementById('makan_dimana').value,
+    catatan: document.getElementById('catatan').value,
+    diskon: document.getElementById('diskon').value,
+    metode_pembayaran: document.getElementById('metode').value
+  }
+});
+
+$('#btn-open-bill, #btn-open-bayar').on('click', openTransactionDetails);
+$('#diskon').on('input', updatePaymentPreview);
+$('#btn-save-open-bill').on('click', saveOpenBill);
+$('#btn-bayar-tanpa-cetak').on('click', () => submitTransaction(false));
+$('#btn-konfirmasi-bayar').on('click', () => submitTransaction(true));
+
+renderCart();
+
+if (@json(request()->boolean('pay'))) {
+  openTransactionDetails();
+}
 </script>
 @endpush

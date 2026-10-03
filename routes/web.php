@@ -28,40 +28,28 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-    Route::resource('barang', BarangController::class);
-    Route::resource('categories', CategoryController::class);
-    Route::resource('users', UserController::class);
+    Route::resource('barang', BarangController::class)->except('show');
+    Route::resource('categories', CategoryController::class)->except('show');
+    Route::resource('users', UserController::class)->except('show');
 
 });
 
 
-Route::middleware(['auth'])->prefix('pos')->name('pos.')->group(function () {
-    // halaman utama POS
+Route::middleware('auth')->prefix('pos')->name('pos.')->group(function () {
     Route::get('/', [PosController::class, 'index'])->name('index');
+    Route::post('/transaksi', [TransaksiController::class, 'store'])->name('transaksi.store');
 
-    // simpan transaksi
-    Route::post('/checkout', [TransaksiController::class, 'store'])->name('store');
+    Route::get('/open-bills', [TransaksiController::class, 'openBills'])->name('open-bills');
+    Route::post('/open-bills', [TransaksiController::class, 'storeOpenBill'])->name('open-bills.store');
+    Route::put('/open-bills/{kode}', [TransaksiController::class, 'updateOpenBill'])->name('open-bills.update');
+    Route::post('/open-bills/{kode}/settle', [TransaksiController::class, 'settleOpenBill'])->name('open-bills.settle');
+    Route::post('/open-bills/{kode}/cancel', [TransaksiController::class, 'cancelOpenBill'])->name('open-bills.cancel');
 
-    // riwayat transaksi
     Route::get('/riwayat', [TransaksiController::class, 'riwayat'])->name('riwayat');
-
-    // simpan transaksi
-        Route::post('/transaksi', [TransaksiController::class, 'store'])->name('transaksi.store');
-
-    // print struk
-        Route::get('/print/{kode}', [TransaksiController::class, 'print'])->name('print');
-
-    // halaman sukses
-        Route::get('/sukses/{kode}', [App\Http\Controllers\POS\TransaksiController::class, 'sukses'])
-        ->name('sukses');
-
-    // detail transaksi
+    Route::get('/print/{kode}', [TransaksiController::class, 'print'])->name('print');
+    Route::get('/sukses/{kode}', [TransaksiController::class, 'sukses'])->name('sukses');
     Route::get('/detail/{kode}', [TransaksiController::class, 'detail'])->name('detail');
-
-    // Delete
     Route::delete('/transaksi/{kode}', [TransaksiController::class, 'destroy'])->name('destroy');
-
-
 });
 
 // Route::middleware(['auth'])

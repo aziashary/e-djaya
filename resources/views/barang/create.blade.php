@@ -1,109 +1,64 @@
 @extends('layouts.main')
 
-@section('judul')
-Input Data Barang
-@endsection
-
-@push('css')
-<link rel="stylesheet" href="{{ asset('assets/vendor/fonts/iconify-icons.css') }}" />
-<link rel="stylesheet" href="{{ asset('assets/vendor/css/core.css') }}" />
-<link rel="stylesheet" href="{{ asset('assets/css/demo.css') }}" />
-<link rel="stylesheet" href="{{ asset('assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css') }}" />
-
-<script src="{{ asset('assets/vendor/js/helpers.js') }}"></script>
-<script src="{{ asset('assets/js/config.js') }}"></script>
-
-<style>
-  @media (max-width: 768px) {
-    .card-body { padding: 1rem; }
-    .btn { font-size: 0.85rem; padding: 0.4rem 0.8rem; }
-  }
-</style>
-@endpush
+@section('judul', 'Tambah Barang | e-Djaya')
 
 @section('content')
-<div class="content-wrapper">
-  <div class="container-xxl flex-grow-1 container-p-y">
+<section aria-labelledby="barang-create-title">
+  @section('breadcrumb')
+    <li class="breadcrumb-item"><a href="{{ route('barang.index') }}">Barang</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Tambah</li>
+  @endsection
+  @include('layouts.partials.breadcrumb')
 
-    <div class="row">
-      <div class="col-12 col-lg-10 mx-auto">
-        <div class="card border-0 shadow-sm">
-          <div class="card-header d-flex align-items-center justify-content-between">
-            <h5 class="mb-0 fw-bold">Tambah Data Barang</h5>
-            <small class="text-body-secondary">Form input barang baru</small>
+  <header class="page-header">
+    <div class="page-heading">
+      <p class="page-kicker">Master produk</p>
+      <h1 id="barang-create-title" class="page-title">Tambah barang</h1>
+      <p class="page-description">Barang aktif akan tersedia pada katalog POS.</p>
+    </div>
+  </header>
+
+  <div class="card task-panel">
+    <div class="card-body">
+      <form action="{{ route('barang.store') }}" method="POST">
+        @csrf
+        <div class="row g-4">
+          <div class="col-lg-7">
+            <label for="nama" class="form-label">Nama barang</label>
+            <input type="text" name="nama" id="nama" class="form-control @error('nama') is-invalid @enderror" value="{{ old('nama') }}" placeholder="Contoh: Kopi susu" required autofocus autocomplete="off">
+            @error('nama')<div class="invalid-feedback">{{ $message }}</div>@enderror
           </div>
 
-          <div class="card-body">
-            <form action="{{ route('barang.store') }}" method="POST">
-              @csrf
+          <div class="col-lg-5">
+            <label for="categories_id" class="form-label">Kategori</label>
+            <select name="categories_id" id="categories_id" class="form-select" required>
+              <option value="">Pilih kategori</option>
+              @foreach($categories as $category)
+                <option value="{{ $category->id }}" @selected(old('categories_id') == $category->id)>{{ $category->nama }}</option>
+              @endforeach
+            </select>
+          </div>
 
-              {{-- Nama Barang --}}
-              <div class="mb-3 row">
-                <label for="nama" class="col-sm-3 col-form-label">Nama Barang</label>
-                <div class="col-sm-9">
-                  <input type="text" name="nama" id="nama" class="form-control" placeholder="Masukkan nama barang" required>
-                </div>
-              </div>
+          <div class="col-lg-7">
+            <label for="harga_jual" class="form-label">Harga jual</label>
+            <div class="input-group">
+              <span class="input-group-text">Rp</span>
+              <input type="number" name="harga_jual" id="harga_jual" class="form-control @error('harga_jual') is-invalid @enderror" value="{{ old('harga_jual') }}" min="0" step="1" inputmode="numeric" placeholder="0" required>
+            </div>
+            @error('harga_jual')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+          </div>
 
-              {{-- categories --}}
-              <div class="mb-3 row">
-                <label for="categories_id" class="col-sm-3 col-form-label">Kategori</label>
-                <div class="col-sm-9">
-                  <select name="categories_id" id="categories_id" class="form-select" required>
-                    <option value="">-- Pilih categories --</option>
-                    @foreach($categories as $k)
-                      <option value="{{ $k->id }}">{{ $k->nama }}</option>
-                    @endforeach
-                  </select>
-                </div>
-              </div>
-
-              <!--{{-- Harga Beli --}}-->
-              <!--<div class="mb-3 row">-->
-              <!--  <label for="harga_beli" class="col-sm-3 col-form-label">Harga Beli</label>-->
-              <!--  <div class="col-sm-9">-->
-              <!--    <input type="number" name="harga_beli" id="harga_beli" class="form-control" placeholder="Masukkan harga beli" required>-->
-              <!--  </div>-->
-              <!--</div>-->
-
-              {{-- Harga Jual --}}
-              <div class="mb-3 row">
-                <label for="harga_jual" class="col-sm-3 col-form-label">Harga Jual</label>
-                <div class="col-sm-9">
-                  <input type="number" name="harga_jual" id="harga_jual" class="form-control" placeholder="Masukkan harga jual" required>
-                </div>
-              </div>
-
-              {{-- SKU --}}
-              <div class="mb-3 row">
-                <label for="sku" class="col-sm-3 col-form-label">SKU</label>
-                <div class="col-sm-9">
-                  <input type="text" name="sku" id="sku" class="form-control" placeholder="Kode SKU (Ga Wajib)" >
-                </div>
-              </div>
-
-              {{-- Deskripsi --}}
-              <div class="mb-4 row">
-                <label for="deskripsi" class="col-sm-3 col-form-label">Deskripsi</label>
-                <div class="col-sm-9">
-                  <textarea name="deskripsi" id="deskripsi" class="form-control" rows="3" placeholder="Masukkan deskripsi barang (opsional)"></textarea>
-                </div>
-              </div>
-
-              {{-- Tombol --}}
-              <div class="row justify-content-end">
-                <div class="col-sm-9">
-                  <button type="submit" class="btn btn-primary">Simpan</button>
-                  <a href="{{ route('barang.index') }}" class="btn btn-outline-secondary ms-2">Batal</a>
-                </div>
-              </div>
-
-            </form>
+          <div class="col-12">
+            <p class="form-hint mb-0">Kode SKU dibuat otomatis saat barang disimpan.</p>
           </div>
         </div>
-      </div>
-    </div>
 
+        <div class="page-actions mt-4">
+          <button type="submit" class="btn btn-primary">Simpan barang</button>
+          <a href="{{ route('barang.index') }}" class="btn btn-outline-secondary">Batal</a>
+        </div>
+      </form>
+    </div>
   </div>
-</div>
+</section>
 @endsection

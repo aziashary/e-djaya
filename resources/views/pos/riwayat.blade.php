@@ -1,109 +1,96 @@
 @extends('layouts.pos')
 
-@section('title', 'Riwayat Transaksi')
-
-@push('styles')
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/litepicker/dist/css/litepicker.css">
-<style>
-  .litepicker {
-    font-family: inherit;
-    border-radius: 8px;
-    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-  }
-  pre.struk {
-    font-family: monospace;
-    font-size: 12px;
-    white-space: pre-wrap;
-    background: #fff;
-    color: #000;
-  }
-</style>
-@endpush
+@section('judul', 'Riwayat Transaksi | e-Djaya')
 
 @section('content')
-<div class="content-wrapper">
-  <div class="row justify-content-center">
-    <div class="col-lg-10">
-      <div class="card shadow-sm border-0">
-        <div class="card-header bg-white d-flex justify-content-between align-items-center">
-          <h5 class="fw-bold mb-0">📜 Riwayat Transaksi</h5>
-          <form class="d-flex gap-2" method="GET" action="{{ route('pos.riwayat') }}">
-            <input type="text" id="date-range" class="form-control form-control-sm"
-                   value="{{ $start }} - {{ $end }}" style="max-width: 250px;" readonly>
-            <input type="hidden" name="start_date" value="{{ $start }}">
-            <input type="hidden" name="end_date" value="{{ $end }}">
-            <button class="btn btn-sm btn-primary">
-              <i class="bx bx-filter-alt"></i> Filter
-            </button>
-          </form>
-        </div>
+<section aria-labelledby="history-title">
+  <header class="page-header">
+    <div class="page-heading">
+      <p class="page-kicker">Riwayat kasir</p>
+      <h1 id="history-title" class="page-title">Transaksi sebelumnya</h1>
+      <p class="page-description">Periksa transaksi berdasarkan rentang tanggal, lalu buka detail struk jika diperlukan.</p>
+    </div>
+  </header>
 
-        <div class="card-body">
-          <div class="table-responsive">
-            <table id="tableRiwayat" class="table table-striped align-middle w-100">
-              <thead class="table-dark">
-                <tr class="text-center">
-                  <th>No</th>
-                  <th>Tanggal</th>
-                  <th>Kode</th>
-                  <th>Kasir</th>
-                  <th>Total</th>
-                  <th>Metode</th>
-                  <th>Aksi</th>
-                </tr>
-              </thead>
-              <tbody>
-                @foreach($transaksi as $i => $t)
-                  <tr>
-                    <td class="text-center">{{ $i + 1 }}</td>
-                    <td>{{ \Carbon\Carbon::parse($t->created_at)->format('d/m/Y H:i') }}</td>
-                    <td>{{ $t->kode_transaksi }}</td>
-                    <td>{{ $t->kasir->name ?? '-' }}</td>
-                    <td class="text-end fw-semibold">Rp {{ number_format($t->total, 0, ',', '.') }}</td>
-                    <td class="text-center">
-                      <span class="badge bg-{{ $t->metode_pembayaran == 'cash' ? 'warning text-dark' : 'info' }}">
-                        {{ strtoupper($t->metode_pembayaran) }}
-                      </span>
-                    </td>
-                    <td class="text-center">
-                      <button type="button" class="btn btn-sm btn-outline-primary btn-detail" 
-                              data-kode="{{ $t->kode_transaksi }}">
-                        <i class="bx bx-search-alt"></i>
-                      </button>
-                      {{-- <a href="{{ route('print', $t->kode_transaksi) }}" 
-                         target="_blank" class="btn btn-sm btn-outline-success">
-                        <i class="bx bx-printer"></i> --}}
-                      </a>
-                    </td>
-                  </tr>
-                @endforeach
-              </tbody>
-            </table>
-          </div>
-        </div>
+  <form class="card card-body mb-3" method="GET" action="{{ route('pos.riwayat') }}">
+    <div class="row g-3 align-items-end">
+      <div class="col-md-8">
+        <label for="date-range" class="form-label">Rentang tanggal</label>
+        <input type="text" id="date-range" class="form-control" value="{{ $start }} sampai {{ $end }}" readonly>
+        <input type="hidden" name="start_date" value="{{ $start }}">
+        <input type="hidden" name="end_date" value="{{ $end }}">
+      </div>
+      <div class="col-md-4 d-grid">
+        <button class="btn btn-primary" type="submit">Terapkan tanggal</button>
       </div>
     </div>
+  </form>
+
+  <div class="card task-panel">
+    <div class="card-header">
+      <h2 class="h5 fw-bold mb-1">Daftar transaksi</h2>
+      <p class="text-muted small mb-0">Periode {{ \Carbon\Carbon::parse($start)->translatedFormat('d M Y') }} sampai {{ \Carbon\Carbon::parse($end)->translatedFormat('d M Y') }}.</p>
+    </div>
+
+    @if($transaksi->isEmpty())
+      <div class="empty-state" role="status">
+        <strong>Tidak ada transaksi pada periode ini</strong>
+        Ubah rentang tanggal atau mulai transaksi baru dari halaman POS.
+      </div>
+    @else
+      <div class="table-responsive" tabindex="0" aria-label="Tabel riwayat transaksi, geser jika diperlukan">
+        <table id="tableRiwayat" class="table align-middle w-100">
+          <thead>
+            <tr>
+              <th scope="col">Tanggal</th>
+              <th scope="col">Kode</th>
+              <th scope="col">Kasir</th>
+              <th scope="col" class="text-end">Total</th>
+              <th scope="col">Metode</th>
+              <th scope="col" class="text-center">Aksi</th>
+            </tr>
+          </thead>
+          <tbody>
+            @foreach($transaksi as $t)
+              <tr>
+                <td>{{ $t->tanggal->format('d/m/Y H:i') }}</td>
+                <td><span class="transaction-code">{{ $t->kode_transaksi }}</span></td>
+                <td>{{ $t->kasir->name ?? 'Tidak tersedia' }}</td>
+                <td class="text-end fw-bold">Rp {{ number_format($t->total, 0, ',', '.') }}</td>
+                <td><span class="badge {{ $t->metode_pembayaran === 'cash' ? 'bg-warning' : 'bg-label-primary' }}">{{ $t->metode_pembayaran === 'cash' ? 'Tunai' : 'QRIS' }}</span></td>
+                <td class="text-center">
+                  <button type="button" class="btn btn-sm btn-outline-primary btn-detail" data-kode="{{ $t->kode_transaksi }}" aria-label="Buka detail transaksi {{ $t->kode_transaksi }}">
+                    <i class="bx bx-detail" aria-hidden="true"></i>
+                    <span class="visually-hidden">Detail</span>
+                  </button>
+                </td>
+              </tr>
+            @endforeach
+          </tbody>
+        </table>
+      </div>
+    @endif
   </div>
-</div>
+</section>
 
-
-<!-- Modal Struk -->
-<div class="modal fade" id="modalDetail" tabindex="-1" aria-labelledby="modalDetailLabel" aria-hidden="true">
-  <div class="modal-dialog modal-sm modal-dialog-centered">
-    <div class="modal-content shadow">
-      <div class="modal-header py-2">
-        <h6 class="modal-title fw-bold" id="modalDetailLabel">🧾 Detail Struk</h6>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+<div class="modal fade receipt-modal" id="modalDetail" tabindex="-1" aria-labelledby="modalDetailLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered receipt-modal-dialog">
+    <div class="modal-content receipt-paper-modal">
+      <div class="modal-header receipt-modal-header">
+        <div>
+          <span class="receipt-badge">Salinan struk</span>
+          <h2 class="modal-title visually-hidden" id="modalDetailLabel">Detail struk</h2>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup detail struk"></button>
       </div>
-      <div class="modal-body p-0">
-        <pre id="strukBody" class="struk p-3 mb-0">Memuat data...</pre>
+      <div class="modal-body receipt-modal-body">
+        <div id="strukBody" class="receipt-paper-sheet" role="status" aria-live="polite">
+          <div class="receipt-status-msg">Memuat detail transaksi...</div>
+        </div>
       </div>
-      <div class="modal-footer d-flex justify-content-between">
-        <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Tutup</button>
-        <button type="button" id="btnPrintStruk" class="btn btn-sm btn-primary">
-          <i class="bx bx-printer"></i> Print
-        </button>
+      <div class="modal-footer receipt-modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Tutup</button>
+        <button type="button" id="btnPrintStruk" class="btn btn-primary">Cetak struk</button>
       </div>
     </div>
   </div>
@@ -111,118 +98,200 @@
 @endsection
 
 @push('scripts')
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/litepicker/dist/bundle.js"></script>
-
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-  // Litepicker setup
-  const picker = new Litepicker({
-    element: document.getElementById('date-range'),
-    singleMode: false,
-    numberOfMonths: 2,
-    numberOfColumns: 2,
-    format: 'YYYY-MM-DD',
-    startDate: '{{ $start }}',
-    endDate: '{{ $end }}',
-    autoApply: true,
-    lang: 'id-ID',
-    minDate: '{{ now()->subMonths(2)->format('Y-m-d') }}',
-    maxDate: '{{ now()->format('Y-m-d') }}',
-  });
-
-  picker.on('selected', (startDate, endDate) => {
-    document.querySelector('[name="start_date"]').value = startDate.format('YYYY-MM-DD');
-    document.querySelector('[name="end_date"]').value = endDate.format('YYYY-MM-DD');
-  });
-
-  // DataTables setup
-  $('#tableRiwayat').DataTable({
-    pageLength: 10,
-    responsive: true,
-    order: [[1, 'desc']],
-    info: false,
-    language: {
-      search: "Cari:",
-      lengthMenu: "Tampilkan _MENU_ data",
-      paginate: { previous: "Sebelumnya", next: "Berikutnya" },
-      zeroRecords: "Tidak ada transaksi ditemukan"
-    },
-    columnDefs: [
-      { orderable: false, targets: [6] },
-      { className: "text-center", targets: [0, 5, 6] },
-      { className: "text-end", targets: [4] }
-    ]
-  });
-
-  // Detail modal
-  $(document).on('click', '.btn-detail', function() {
-    const kode = $(this).data('kode');
-    $('#modalDetail').modal('show');
-    $('#strukBody').text('Memuat data...');
-    $('#btnPrintStruk').data('kode', kode);
-
-    $.ajax({
-      url: `/pos/detail/${kode}`,
-      type: "GET",
-      success: function(res) {
-        if (res.status) renderStrukKasir(res.data);
-        else $('#strukBody').text('Data tidak ditemukan.');
-      },
-      error: function() {
-        $('#strukBody').text('Gagal memuat data.');
-      }
+document.addEventListener('DOMContentLoaded', () => {
+  const dateRange = document.getElementById('date-range');
+  if (dateRange) {
+    const picker = new Litepicker({
+      element: dateRange,
+      singleMode: false,
+      numberOfMonths: window.innerWidth < 768 ? 1 : 2,
+      numberOfColumns: window.innerWidth < 768 ? 1 : 2,
+      format: 'YYYY-MM-DD',
+      startDate: '{{ $start }}',
+      endDate: '{{ $end }}',
+      autoApply: true,
+      lang: 'id-ID',
+      minDate: '{{ now()->subMonths(2)->format('Y-m-d') }}',
+      maxDate: '{{ now()->format('Y-m-d') }}'
     });
-  });
 
-  // Render struk
-  function renderStrukKasir(data) {
-    const padRight = (left, right, width = 42) => {
-      const space = width - (left.length + right.length);
-      return left + ' '.repeat(space > 0 ? space : 0) + right;
-    };
-    let struk = '';
-    if (data.level === 'staff') {
-      struk += '                   Ranu\n';
-      struk += 'Jl. Raya Puncak - Gadog, Tugu Selatan, Bogor\n';
-    } else {
-      struk += '           Warkop Djaya 590\n';
-      struk += '       Jln Raya Puncak No. 590\n';
-    }
-    struk += '------------------------------------------\n';
-    struk += `Kode   : ${data.kode}\n`;
-    struk += `Tanggal: ${data.tanggal}\n`;
-    struk += `Kasir  : ${data.kasir}\n`;
-    struk += `Atas Nama  : ${data.nama_customer}\n`;
-    struk += '------------------------------------------\n';
-    data.items.forEach((item) => {
-      struk += `${item.nama}\n`;
-      struk += padRight(`${item.qty} x ${Number(item.harga).toLocaleString('id-ID')}`, `Rp ${Number(item.subtotal).toLocaleString('id-ID')}`) + '\n';
+    picker.on('selected', (startDate, endDate) => {
+      document.querySelector('[name="start_date"]').value = startDate.format('YYYY-MM-DD');
+      document.querySelector('[name="end_date"]').value = endDate.format('YYYY-MM-DD');
+      dateRange.value = `${startDate.format('YYYY-MM-DD')} sampai ${endDate.format('YYYY-MM-DD')}`;
     });
-    struk += '------------------------------------------\n';
-    struk += padRight('TOTAL', `Rp ${Number(data.total).toLocaleString('id-ID')}`) + '\n';
-    struk += padRight('Metode Pembayaran', data.metode_pembayaran ? data.metode_pembayaran.toUpperCase() : '-') + '\n';
-    if (data.catatan && data.catatan.trim() !== '') {
-      struk += '------------------------------------------\n';
-      struk += 'Catatan:\n';
-      struk += data.catatan.trim().replace(/\r?\n|\r/g, ' ') + '\n';
-    }
-    struk += '------------------------------------------\n';
-    if (data.level === 'staff') {
-      struk += '               Terima Kasih\n';
-    } else {
-      struk += '         Djaya!\n';
-    }
-    $('#strukBody').text(struk);
   }
 
-  // Print struk
+  if (document.getElementById('tableRiwayat')) {
+    $('#tableRiwayat').DataTable({
+      pageLength: 10,
+      order: [[0, 'desc']],
+      info: false,
+      language: {
+        search: 'Cari transaksi:',
+        lengthMenu: 'Tampilkan _MENU_ data',
+        paginate: { previous: 'Sebelumnya', next: 'Berikutnya' },
+        zeroRecords: 'Transaksi tidak ditemukan'
+      },
+      columnDefs: [{ orderable: false, targets: [5] }]
+    });
+  }
+
+  const formatRupiah = (val) => 'Rp ' + Number(val || 0).toLocaleString('id-ID');
+
+  function escapeHtml(str) {
+    return String(str || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  $(document).on('click', '.btn-detail', function() {
+    const code = $(this).data('kode');
+    const body = $('#strukBody');
+    body.html('<div class="receipt-status-msg">Memuat detail transaksi...</div>');
+    $('#btnPrintStruk').attr('data-kode', code).data('kode', code);
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('modalDetail')).show();
+
+    $.ajax({
+      url: `/pos/detail/${code}`,
+      type: 'GET',
+      success: (response) => response.status ? renderReceipt(response.data) : body.html('<div class="receipt-status-msg receipt-error">Data transaksi tidak ditemukan.</div>'),
+      error: () => body.html('<div class="receipt-status-msg receipt-error">Detail transaksi gagal dimuat. Tutup dialog, lalu coba lagi.</div>')
+    });
+  });
+
+  function renderReceipt(data) {
+    const isStaff = String(data.level || '').toLowerCase() === 'staff';
+    const storeName = isStaff ? 'Kopi Ranu' : 'Warkop Djaya 590';
+    const storeAddress = isStaff
+      ? 'Jl. Raya Puncak - Gadog, Tugu Selatan, Bogor'
+      : 'Jln Raya Puncak No. 590';
+
+    const orderType = data.makan_dimana === 'Takeaway' ? 'Dibawa pulang' : 'Makan di tempat';
+    const isCash = String(data.metode_pembayaran || '').toLowerCase() === 'cash';
+    const paymentMethod = isCash ? 'Tunai (Cash)' : String(data.metode_pembayaran || '-').toUpperCase();
+
+    let itemsHtml = '';
+    (data.items || []).forEach((item) => {
+      const itemSubtotal = item.subtotal || (item.qty * item.harga);
+      itemsHtml += `
+        <div class="receipt-item-row">
+          <div class="receipt-item-name">${escapeHtml(item.nama)}</div>
+          <div class="receipt-item-calc">
+            <span class="receipt-item-qty">${item.qty} x ${formatRupiah(item.harga)}</span>
+            <span class="receipt-item-subtotal">${formatRupiah(itemSubtotal)}</span>
+          </div>
+        </div>
+      `;
+    });
+
+    const subtotal = Number(data.subtotal || 0) || Number(data.total || 0);
+    const discount = Number(data.diskon || 0);
+    const total = Number(data.total || 0);
+
+    let discountHtml = '';
+    if (discount > 0) {
+      const discountAmount = subtotal * (discount / 100);
+      discountHtml = `
+        <div class="receipt-calc-row">
+          <span>Subtotal</span>
+          <span>${formatRupiah(subtotal)}</span>
+        </div>
+        <div class="receipt-calc-row receipt-calc-discount">
+          <span>Diskon (${discount}%)</span>
+          <span>-${formatRupiah(discountAmount)}</span>
+        </div>
+      `;
+    }
+
+    let noteHtml = '';
+    if (data.catatan && String(data.catatan).trim()) {
+      noteHtml = `
+        <div class="receipt-divider"></div>
+        <div class="receipt-note-box">
+          <span class="receipt-note-label">Catatan:</span>
+          <span class="receipt-note-text">${escapeHtml(String(data.catatan).trim())}</span>
+        </div>
+      `;
+    }
+
+    const html = `
+      <div class="receipt-header-center">
+        <div class="receipt-brand-title">${escapeHtml(storeName)}</div>
+        <div class="receipt-brand-address">${escapeHtml(storeAddress)}</div>
+      </div>
+
+      <div class="receipt-divider"></div>
+
+      <div class="receipt-meta-grid">
+        <div class="receipt-meta-row">
+          <span class="receipt-meta-label">No. Transaksi</span>
+          <span class="receipt-meta-val receipt-code">${escapeHtml(data.kode)}</span>
+        </div>
+        <div class="receipt-meta-row">
+          <span class="receipt-meta-label">Waktu</span>
+          <span class="receipt-meta-val">${escapeHtml(data.tanggal)}</span>
+        </div>
+        <div class="receipt-meta-row">
+          <span class="receipt-meta-label">Kasir</span>
+          <span class="receipt-meta-val">${escapeHtml(data.kasir)}</span>
+        </div>
+        ${data.nama_customer && data.nama_customer !== '-' ? `
+          <div class="receipt-meta-row">
+            <span class="receipt-meta-label">Pelanggan</span>
+            <span class="receipt-meta-val">${escapeHtml(data.nama_customer)}</span>
+          </div>
+        ` : ''}
+        <div class="receipt-meta-row">
+          <span class="receipt-meta-label">Pesanan</span>
+          <span class="receipt-meta-val">${escapeHtml(orderType)}</span>
+        </div>
+      </div>
+
+      <div class="receipt-divider"></div>
+
+      <div class="receipt-items-list">
+        ${itemsHtml}
+      </div>
+
+      <div class="receipt-divider"></div>
+
+      <div class="receipt-totals-block">
+        ${discountHtml}
+        <div class="receipt-total-main-row">
+          <span>TOTAL</span>
+          <span class="receipt-total-value">${formatRupiah(total)}</span>
+        </div>
+        <div class="receipt-calc-row receipt-payment-row">
+          <span>Metode Bayar</span>
+          <span class="receipt-payment-badge">${escapeHtml(paymentMethod)}</span>
+        </div>
+      </div>
+
+      ${noteHtml}
+
+      <div class="receipt-divider"></div>
+
+      <div class="receipt-footer-center">
+        <p class="receipt-footer-thanks">Terima kasih atas kunjungan Anda!</p>
+        <p class="receipt-footer-sub">Simpan struk ini sebagai bukti pembayaran</p>
+      </div>
+    `;
+
+    $('#strukBody').html(html);
+  }
+
   $('#btnPrintStruk').on('click', function() {
-    const kode = $(this).data('kode');
-    if (!kode) return alert('Kode transaksi tidak ditemukan.');
-    window.open(`/pos/print/${kode}`, '_blank');
+    const code = $(this).data('kode');
+    if (!code) {
+      $('#strukBody').text('Kode transaksi tidak tersedia. Tutup dialog, lalu coba lagi.');
+      return;
+    }
+    window.open(`/pos/print/${code}`, '_blank');
   });
 });
 </script>

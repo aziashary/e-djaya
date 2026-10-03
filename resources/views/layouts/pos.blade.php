@@ -1,229 +1,232 @@
 <!doctype html>
-<html lang="en" class="layout-compact" data-assets-path="{{ asset('assets/') }}/">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-    <title>@yield('judul', 'POS')</title>
+<html lang="id" data-assets-path="{{ asset('assets/') }}/">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <meta name="theme-color" content="#fff8f3">
+  <title>@yield('judul', 'POS e-Djaya')</title>
 
-    <link rel="icon" type="image/x-icon" href="{{ asset('assets/img/favicon/favicon.ico') }}" />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700&display=swap" />
-    <link rel="stylesheet" href="{{ asset('assets/vendor/css/core.css') }}" />
-    <link rel="stylesheet" href="{{ asset('assets/css/demo.css') }}" />
-    <link rel="stylesheet" href="{{ asset('assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css') }}" />
-    <link rel="stylesheet" href="{{ asset('assets/vendor/fonts/iconify-icons.css') }}" />
-    
-    @stack('css')
+  <link rel="icon" type="image/x-icon" href="{{ asset('assets/img/favicon/favicon.ico') }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ asset('assets/vendor/css/core.css') }}">
+  <link rel="stylesheet" href="{{ asset('assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css') }}">
+  <link rel="stylesheet" href="{{ asset('assets/vendor/fonts/iconify-icons.css') }}">
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap5.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/litepicker/dist/css/litepicker.css">
+  <link rel="stylesheet" href="{{ asset('assets/css/edjaya-ui.css') }}?v={{ file_exists(public_path('assets/css/edjaya-ui.css')) ? filemtime(public_path('assets/css/edjaya-ui.css')) : time() }}">
+  @stack('styles')
+  @stack('css')
+</head>
+<body class="pos-page">
+  @php
+    $level = strtolower((string) Auth::user()->level);
+    $isStaff = $level === 'staff';
+    $storeName = $isStaff ? 'Ranu' : 'Djaya 590';
+  @endphp
 
-    <style>
-      body {
-        background: #f7f7f7;
-      }
+  <a class="skip-link" href="#main-content">Lewati ke area kasir</a>
+  <div class="app-loading-bar" data-page-loading role="status" aria-label="Memuat halaman" aria-hidden="true" hidden></div>
+  <div class="app-error-banner" data-page-error role="alert" hidden>
+    <span data-error-message></span>
+    <button type="button" class="btn btn-sm btn-outline-danger ms-2" data-dismiss-error>Tutup</button>
+  </div>
 
-      .pos-wrapper {
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-        position: relative;
-        padding: 0.2rem;
-      }
+  <div class="pos-wrapper">
+    <header class="pos-header">
+      <a href="{{ route('pos.index') }}" class="brand text-decoration-none" aria-label="POS {{ $storeName }}">
+        <img src="{{ $isStaff ? asset('assets/img/ranu logo.png') : asset('assets/img/logo.png') }}" alt="Logo {{ $storeName }}" width="120" height="38">
+        <span>
+          <h1>Point of Sale</h1>
+        </span>
+      </a>
 
-            /* ====== Header Actions ====== */
-      .header-actions {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-      }
+      <nav class="header-actions" aria-label="Navigasi kasir">
+        <a href="{{ route('dashboard') }}" class="action-btn" data-leave-pos aria-label="Dashboard" title="Dashboard">
+          <i class="bx bx-grid-alt" aria-hidden="true"></i>
+        </a>
+        <a href="{{ route('pos.index') }}" class="action-btn {{ request()->routeIs('pos.index') ? 'active' : '' }}" aria-label="Transaksi baru" title="Transaksi baru" @if(request()->routeIs('pos.index')) aria-current="page" @endif>
+          <i class="bx bx-cart" aria-hidden="true"></i>
+        </a>
+        <a href="{{ route('pos.open-bills') }}" class="action-btn {{ request()->routeIs('pos.open-bills') ? 'active' : '' }}" aria-label="Open bill" title="Open bill" @if(request()->routeIs('pos.open-bills')) aria-current="page" @endif>
+          <i class="bx bx-receipt" aria-hidden="true"></i>
+        </a>
+        <a href="{{ route('pos.riwayat') }}" class="action-btn {{ request()->routeIs('pos.riwayat') ? 'active' : '' }}" aria-label="Riwayat transaksi" title="Riwayat transaksi" @if(request()->routeIs('pos.riwayat')) aria-current="page" @endif>
+          <i class="bx bx-history" aria-hidden="true"></i>
+        </a>
+        <button id="fullscreenBtn" type="button" class="action-btn" aria-label="Aktifkan layar penuh" title="Layar penuh" aria-pressed="false">
+          <i class="bx bx-fullscreen" aria-hidden="true"></i>
+        </button>
+        <button id="logoutBtn" type="button" class="action-btn logout-btn" aria-label="Keluar dari aplikasi" title="Keluar">
+          <i class="bx bx-log-out" aria-hidden="true"></i>
+        </button>
+      </nav>
+    </header>
 
-      .action-btn {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 38px;
-        height: 38px;
-        border-radius: 10px;
-        background: #f7f8fa;
-        color: #555;
-        font-size: 1.3rem;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        border: none;
-      }
+    <main id="main-content" class="pos-content" tabindex="-1">
+      @include('layouts.partials.flash')
+      @yield('content')
+    </main>
+  </div>
 
-      .action-btn:hover {
-        background: #007bff;
-        color: #fff;
-        transform: scale(1.05);
-      }
-
-      .logout-btn {
-        color: #ff4d4f !important;
-      }
-
-      .logout-btn:hover {
-        background: #ff4d4f !important;
-        color: #fff !important;
-      }
-
-
-      /* Header POS */
-      .pos-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        background: #fff;
-        border-radius: 12px;
-         padding: 0.5rem 1rem;      /* lebih tipis */
-        margin-bottom: 1rem;       /* jarak bawah dikit aja */
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-      }
-
-      .pos-header .brand {
-        display: flex;
-        align-items: center;
-        gap: 0.8rem;
-      }
-
-      .pos-header img {
-        width: 65px;               /* logo mengecil */
-        height: 32px;
-        border-radius: 8px;
-      }
-
-      .pos-header h4 {
-        margin: 0;
-        font-weight: 700;
-        color: #222;
-      }
-
-      .pos-header small {
-        display: block;
-        color: #666;
-        font-weight: 500;
-        font-size: 0.85rem;
-      }
-
-      /* Tombol logout */
-      .logout-btn {
-        background: #fff;
-        border: 1px solid #eee;
-        border-radius: 50%;
-        width: 42px;
-        height: 42px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #555;
-        cursor: pointer;
-        transition: 0.25s;
-      }
-
-      .logout-btn:hover {
-        background: #dc3545;
-        color: #fff;
-      }
-    </style>
-  </head>
-
-  <body>
-    {{-- <div class="logout-btn" id="logoutBtn" title="Logout">
-          <i class="bx bx-log-out"></i>
-    </div> --}}
-    <div class="pos-wrapper">
-      <!-- Header POS -->
-      <div class="pos-header">
-        <div class="brand">
-          <img src="{{ Auth::user()->level === 'staff' ? asset('assets/img/ranu logo.png') : asset('assets/img/logo.png') }}" alt="Logo Toko">
-          <div>
-            <h4>Point Of Sales</h4>
-            <small>{{ Auth::user()->level === 'staff' ? 'Ranu' : 'Djaya 590' }}</small>
-          </div>
+  <div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 class="modal-title fs-5" id="logoutModalLabel">Keluar dari aplikasi?</h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup dialog"></button>
         </div>
-
-        <div class="header-actions">
-          <!-- Tombol Dashboard -->
-          <a href="{{ route('dashboard') }}" class="action-btn" title="Dashboard">
-            <i class="bx bx-chart"></i>
-          </a>
-
-          <!-- Tombol Transaksi -->
-          <a href="{{ route('pos.index') }}" class="action-btn" title="POS">
-            <i class="bx bx-money-withdraw"></i>
-          </a>
-          <!-- Tombol Riwayat Transaksi -->
-          <a href="{{ route('pos.riwayat') }}" class="action-btn" title="Riwayat Transaksi">
-            <i class="bx bx-history"></i>
-          </a>
-
-          <!-- Tombol Fullscreen -->
-          <button id="fullscreenBtn" class="action-btn" title="Fullscreen">
-            <i class="bx bx-fullscreen"></i>
-          </button>
-
-          <!-- Tombol Logout -->
-          <div class="logout-btn action-btn" id="logoutBtn" title="Logout">
-            <i class="bx bx-log-out"></i>
-          </div>
+        <div class="modal-body">
+          <p class="mb-0">Sesi kasir akan ditutup. Pastikan transaksi yang sedang dikerjakan sudah selesai.</p>
         </div>
-      </div>
-    
-
-      <!-- Modal Konfirmasi Logout -->
-      <div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title"><i class="bx bx-log-out-circle text-danger me-2"></i>Konfirmasi Logout</h5>
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body text-center py-4">
-              <p>Beneran Cabut?</p>
-            </div>
-            <div class="modal-footer justify-content-center">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                <i class="bx bx-x"></i> Kedengan
-              </button>
-              <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-inline">
-                @csrf
-                <button type="submit" class="btn btn-danger">
-                  <i class="bx bx-log-out"></i> Iya
-                </button>
-              </form>
-            </div>
-          </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
+          <form id="logoutForm" action="{{ route('logout') }}" method="POST">
+            @csrf
+            <button type="submit" class="btn btn-danger">Keluar</button>
+          </form>
         </div>
-      </div>
-
-      <!-- Konten POS -->
-      <div class="content-wrapper">
-        @yield('content')
       </div>
     </div>
+  </div>
 
-    <!-- JS -->
-    <script src="{{ asset('assets/vendor/libs/jquery/jquery.js') }}"></script>
-    <script src="{{ asset('assets/vendor/js/bootstrap.js') }}"></script>
-    <script src="{{ asset('assets/js/main.js') }}"></script>
-    @stack('scripts')
+  <div id="posFullscreenShell" class="pos-fullscreen-shell" hidden>
+    <iframe id="posFullscreenFrame" title="e-Djaya POS layar penuh" allow="fullscreen"></iframe>
+  </div>
 
-    <script>
-      // trigger modal konfirmasi logout
-      document.getElementById('logoutBtn').addEventListener('click', function() {
-        const modal = new bootstrap.Modal(document.getElementById('logoutModal'));
-        modal.show();
+  <script src="{{ asset('assets/vendor/libs/jquery/jquery.js') }}"></script>
+  <script src="{{ asset('assets/vendor/libs/popper/popper.js') }}"></script>
+  <script src="{{ asset('assets/vendor/js/bootstrap.js') }}"></script>
+  <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap5.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/litepicker/dist/bundle.js"></script>
+  <script src="{{ asset('assets/js/edjaya-ui.js') }}?v={{ file_exists(public_path('assets/js/edjaya-ui.js')) ? filemtime(public_path('assets/js/edjaya-ui.js')) : time() }}"></script>
+  @stack('scripts')
+
+  <script>
+    const logoutButton = document.getElementById('logoutBtn');
+    const logoutForm = document.getElementById('logoutForm');
+    const fullscreenButton = document.getElementById('fullscreenBtn');
+    const fullscreenShell = document.getElementById('posFullscreenShell');
+    const fullscreenFrame = document.getElementById('posFullscreenFrame');
+    const runsInsidePosShell = window.self !== window.top;
+    let fullscreenExitUrl = null;
+
+    function setFullscreenButton(active) {
+      fullscreenButton?.setAttribute('aria-pressed', String(active));
+      fullscreenButton?.setAttribute('aria-label', active ? 'Keluar dari layar penuh' : 'Aktifkan layar penuh');
+      const icon = fullscreenButton?.querySelector('i');
+      if (icon) {
+        icon.className = active ? 'bx bx-exit-fullscreen' : 'bx bx-fullscreen';
+      }
+    }
+
+    function showFullscreenError() {
+      const banner = document.querySelector('[data-page-error]');
+      const message = banner?.querySelector('[data-error-message]');
+      if (banner && message) {
+        message.textContent = 'Mode layar penuh tidak tersedia pada perangkat ini.';
+        banner.hidden = false;
+      }
+    }
+
+    if (runsInsidePosShell) {
+      setFullscreenButton(true);
+      document.querySelectorAll('[data-leave-pos]').forEach((link) => {
+        link.target = '_top';
       });
+      if (logoutForm) {
+        logoutForm.target = '_top';
+      }
+    }
 
-        // Toggle fullscreen
-        const fullscreenBtn = document.getElementById('fullscreenBtn');
-        fullscreenBtn.addEventListener('click', () => {
-          if (!document.fullscreenElement) {
-            document.documentElement.requestFullscreen();
-            fullscreenBtn.innerHTML = '<i class="bx bx-exit-fullscreen"></i>';
-          } else {
-            document.exitFullscreen();
-            fullscreenBtn.innerHTML = '<i class="bx bx-fullscreen"></i>';
-          }
-        });
+    logoutButton?.addEventListener('click', () => {
+      bootstrap.Modal.getOrCreateInstance(document.getElementById('logoutModal')).show();
+    });
 
-    </script>
-  </body>
+    fullscreenButton?.addEventListener('click', async () => {
+      if (runsInsidePosShell) {
+        window.parent.postMessage({
+          type: 'edjaya-exit-pos-fullscreen',
+          url: window.location.href,
+          state: window.getPosFullscreenState?.() ?? null
+        }, window.location.origin);
+        return;
+      }
+
+      try {
+        if (document.fullscreenElement) {
+          await document.exitFullscreen();
+          return;
+        }
+
+        const currentPosState = window.getPosFullscreenState?.();
+        if (currentPosState) {
+          sessionStorage.setItem('edjaya-pos-fullscreen-cart', JSON.stringify({
+            url: window.location.href,
+            state: currentPosState
+          }));
+        }
+
+        fullscreenFrame.src = window.location.href;
+        fullscreenShell.hidden = false;
+        await document.documentElement.requestFullscreen();
+        fullscreenFrame.focus();
+      } catch (error) {
+        fullscreenShell.hidden = true;
+        sessionStorage.removeItem('edjaya-pos-fullscreen-cart');
+        fullscreenFrame.src = 'about:blank';
+        showFullscreenError();
+      }
+    });
+
+    window.addEventListener('message', async (event) => {
+      if (
+        event.origin !== window.location.origin ||
+        event.source !== fullscreenFrame.contentWindow ||
+        event.data?.type !== 'edjaya-exit-pos-fullscreen'
+      ) {
+        return;
+      }
+
+      const requestedUrl = new URL(event.data.url, window.location.origin);
+      if (requestedUrl.origin === window.location.origin && requestedUrl.pathname.startsWith('/pos')) {
+        fullscreenExitUrl = requestedUrl.href;
+
+        if (event.data.state) {
+          sessionStorage.setItem('edjaya-pos-fullscreen-cart', JSON.stringify({
+            url: fullscreenExitUrl,
+            state: event.data.state
+          }));
+        }
+      }
+
+      if (document.fullscreenElement) {
+        await document.exitFullscreen();
+      }
+    });
+
+    document.addEventListener('fullscreenchange', () => {
+      if (runsInsidePosShell) {
+        return;
+      }
+
+      const active = Boolean(document.fullscreenElement);
+      setFullscreenButton(active);
+
+      if (!active && !fullscreenShell.hidden) {
+        fullscreenShell.hidden = true;
+        fullscreenFrame.src = 'about:blank';
+
+        if (fullscreenExitUrl) {
+          const destination = fullscreenExitUrl;
+          fullscreenExitUrl = null;
+          window.location.href = destination;
+        }
+      }
+    });
+  </script>
+</body>
 </html>

@@ -56,13 +56,6 @@ class BarangController extends Controller
     return redirect()->route('barang.index')->with('success', 'Barang berhasil ditambahkan!');
 }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Barang $barang)
-    {
-        return view('barang.show', compact('barang'));
-    }
 
     /**
      * Show the form for editing the specified resource.

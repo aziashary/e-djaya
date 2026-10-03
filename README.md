@@ -8,12 +8,21 @@
 - **📂 Manajemen Kategori**: Pengelompokan barang berdasarkan kategori (contoh: Makanan, Minuman) untuk memudahkan pencarian.
 - **🛒 Point of Sales (Kasir)**: Antarmuka kasir yang responsif untuk proses transaksi, perhitungan total belanja, kembalian, dan checkout.
 - **🧾 Cetak Struk**: Fitur cetak struk otomatis (format rapi tanpa margin) setelah transaksi berhasil dilakukan.
+- **Open bill**: Simpan pesanan berstatus `pending`, lanjutkan dari kasir lain di outlet yang sama, lalu bayar atau batalkan tanpa membuat transaksi duplikat.
+- **Layar penuh POS berkelanjutan**: Navigasi transaksi baru, open bill, riwayat, dan halaman sukses tetap berada dalam sesi layar penuh sampai tombol layar penuh ditekan lagi.
 - **📊 Laporan Penjualan**: 
   - **Laporan Keuangan**: Memantau pemasukan dan pengeluaran.
   - **Laporan Transaksi / Riwayat Transaksi**: Melihat detail dari transaksi-transaksi sebelumnya.
   - **Laporan Produk Terjual**: Mengetahui produk apa saja yang paling laku.
 - **👥 Manajemen Pengguna (Users)**: Kelola data staf/kasir yang memiliki akses ke dalam sistem.
 - **🔒 Autentikasi & Keamanan**: Login, Register, dan manajemen profil dengan aman (menggunakan Laravel Breeze).
+
+### Alur open bill
+
+1. Tambahkan produk di halaman POS, lalu pilih **Simpan open bill**.
+2. Isi nama pelanggan atau meja. Jenis pesanan, catatan, dan diskon ikut tersimpan.
+3. Buka menu **Open bill** untuk melanjutkan isi keranjang, langsung membayar, atau membatalkan bill.
+4. Bill baru masuk ke dashboard dan laporan penjualan setelah pembayaran selesai. Bill `pending` dan `batal` tidak dihitung sebagai omzet.
 
 ## 💻 Teknologi yang Digunakan
 

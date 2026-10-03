@@ -1,62 +1,49 @@
 @extends('layouts.main')
 
-@section('judul')
-<title>Tambah Kategori</title>
-@endsection
+@section('judul', 'Tambah Kategori | e-Djaya')
 
 @section('content')
-<div class="content-wrapper">
-  <div class="container-xxl flex-grow-1 container-p-y">
-    <div class="row">
-      <div class="col-12 col-lg-8 mx-auto">
-        <div class="card border-0 shadow-sm">
-          <div class="card-header d-flex align-items-center justify-content-between">
-            <h5 class="mb-0 fw-bold">Tambah Kategori</h5>
-            <small class="text-body-secondary">Form untuk menambah kategori baru</small>
+<section aria-labelledby="category-create-title">
+  @section('breadcrumb')
+    <li class="breadcrumb-item"><a href="{{ route('categories.index') }}">Kategori</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Tambah</li>
+  @endsection
+  @include('layouts.partials.breadcrumb')
+
+  <header class="page-header">
+    <div class="page-heading">
+      <p class="page-kicker">Master produk</p>
+      <h1 id="category-create-title" class="page-title">Tambah kategori</h1>
+      <p class="page-description">Gunakan nama yang mudah dikenali kasir saat memilih produk.</p>
+    </div>
+  </header>
+
+  <div class="card task-panel">
+    <div class="card-body">
+      <form action="{{ route('categories.store') }}" method="POST">
+        @csrf
+        <div class="row g-4">
+          <div class="col-lg-7">
+            <label for="nama" class="form-label">Nama kategori</label>
+            <input type="text" name="nama" id="nama" class="form-control @error('nama') is-invalid @enderror" value="{{ old('nama') }}" placeholder="Contoh: Kopi susu" required autofocus autocomplete="off">
+            @error('nama')<div class="invalid-feedback">{{ $message }}</div>@enderror
           </div>
-
-          <div class="card-body">
-            <form action="{{ route('categories.store') }}" method="POST">
-              @csrf
-
-              {{-- Nama Kategori --}}
-              <div class="mb-3 row">
-                <label for="nama" class="col-sm-3 col-form-label">Nama Kategori</label>
-                <div class="col-sm-9">
-                  <input
-                    type="text"
-                    name="nama"
-                    id="nama"
-                    class="form-control"
-                    placeholder="Masukkan nama kategori"
-                    required>
-                </div>
-              </div>
-
-              {{-- Deskripsi --}}
-              <div class="mb-4 row">
-                <label for="deskripsi" class="col-sm-3 col-form-label">Deskripsi</label>
-                <div class="col-sm-9">
-                  <select name="deskripsi" id="deskripsi" class="form-select" required>
-                    <option value="">-- Pilih categories --</option>
-                      <option value="Makanan">Makanan</option>
-                      <option value="Minuman">Minuman</option>
-                  </select>
-                </div>
-              </div>
-
-              {{-- Tombol --}}
-              <div class="row justify-content-end">
-                <div class="col-sm-9">
-                  <button type="submit" class="btn btn-primary">Simpan</button>
-                  <a href="{{ route('categories.index') }}" class="btn btn-outline-secondary ms-2">Batal</a>
-                </div>
-              </div>
-            </form>
+          <div class="col-lg-5">
+            <label for="deskripsi" class="form-label">Jenis produk</label>
+            <select name="deskripsi" id="deskripsi" class="form-select" required>
+              <option value="">Pilih jenis produk</option>
+              <option value="Makanan" @selected(old('deskripsi') === 'Makanan')>Makanan</option>
+              <option value="Minuman" @selected(old('deskripsi') === 'Minuman')>Minuman</option>
+            </select>
           </div>
         </div>
-      </div>
+
+        <div class="page-actions mt-4">
+          <button type="submit" class="btn btn-primary">Simpan kategori</button>
+          <a href="{{ route('categories.index') }}" class="btn btn-outline-secondary">Batal</a>
+        </div>
+      </form>
     </div>
   </div>
-</div>
+</section>
 @endsection

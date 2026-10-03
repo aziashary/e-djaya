@@ -1,42 +1,63 @@
 @extends('layouts.main')
 
-@section('content')
-<div class="container-xxl flex-grow-1 container-p-y">
-  <h4 class="fw-bold mb-4">Edit User</h4>
+@section('judul', 'Edit Pengguna | e-Djaya')
 
-  <div class="card p-4">
-    <form action="{{ route('users.update', $user->id) }}" method="POST">
-      @csrf
-      @method('PUT')
-      <div class="row">
-        <div class="col-md-6 mb-3">
-          <label>Nama Lengkap</label>
-          <input type="text" name="name" class="form-control" value="{{ $user->name }}" required>
+@section('content')
+<section aria-labelledby="user-edit-title">
+  @section('breadcrumb')
+    <li class="breadcrumb-item"><a href="{{ route('users.index') }}">Pengguna</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Edit</li>
+  @endsection
+  @include('layouts.partials.breadcrumb')
+
+  <header class="page-header">
+    <div class="page-heading">
+      <p class="page-kicker">Pengaturan akses</p>
+      <h1 id="user-edit-title" class="page-title">Edit pengguna</h1>
+      <p class="page-description">Perbarui identitas akun atau ubah hak akses pengguna.</p>
+    </div>
+  </header>
+
+  <div class="card task-panel">
+    <div class="card-body">
+      <form action="{{ route('users.update', $user->id) }}" method="POST">
+        @csrf
+        @method('PUT')
+        <div class="row g-4">
+          <div class="col-md-6">
+            <label for="name" class="form-label">Nama lengkap</label>
+            <input type="text" id="name" name="name" class="form-control" value="{{ old('name', $user->name) }}" required autofocus autocomplete="name">
+          </div>
+          <div class="col-md-6">
+            <label for="username" class="form-label">Username</label>
+            <input type="text" id="username" name="username" class="form-control" value="{{ old('username', $user->username) }}" required autocomplete="username">
+          </div>
+          <div class="col-md-6">
+            <label for="email" class="form-label">Email</label>
+            <input type="email" id="email" name="email" class="form-control" value="{{ old('email', $user->email) }}" required autocomplete="email">
+          </div>
+          <div class="col-md-6">
+            <label for="level" class="form-label">Hak akses</label>
+            @php $currentLevel = strtolower((string) old('level', $user->level)); @endphp
+            <select id="level" name="level" class="form-select" required>
+              <option value="admin" @selected($currentLevel === 'admin')>Admin</option>
+              <option value="kasir" @selected($currentLevel === 'kasir')>Kasir</option>
+              <option value="staff" @selected($currentLevel === 'staff')>Staff</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label for="password" class="form-label">Password baru</label>
+            <input type="password" id="password" name="password" class="form-control" autocomplete="new-password" aria-describedby="password-hint">
+            <p class="form-hint" id="password-hint">Kosongkan jika password tidak diubah.</p>
+          </div>
         </div>
-        <div class="col-md-6 mb-3">
-          <label>Username</label>
-          <input type="text" name="username" class="form-control" value="{{ $user->username }}" required>
+
+        <div class="page-actions mt-4">
+          <button type="submit" class="btn btn-primary">Simpan perubahan</button>
+          <a href="{{ route('users.index') }}" class="btn btn-outline-secondary">Batal</a>
         </div>
-        <div class="col-md-6 mb-3">
-          <label>Email</label>
-          <input type="email" name="email" class="form-control" value="{{ $user->email }}" required>
-        </div>
-        <div class="col-md-6 mb-3">
-          <label>Level</label>
-          <select name="level" class="form-select" required>
-            <option value="admin" {{ $user->level == 'admin' ? 'selected' : '' }}>Admin</option>
-            <option value="kasir" {{ $user->level == 'kasir' ? 'selected' : '' }}>Kasir</option>
-            <option value="staff" {{ $user->level == 'staff' ? 'selected' : '' }}>Staff</option>
-          </select>
-        </div>
-        <div class="col-md-6 mb-3">
-          <label>Password Baru (Opsional)</label>
-          <input type="password" name="password" class="form-control" placeholder="Kosongkan jika tidak diubah">
-        </div>
-      </div>
-      <button type="submit" class="btn btn-primary">Update</button>
-      <a href="{{ route('users.index') }}" class="btn btn-secondary">Kembali</a>
-    </form>
+      </form>
+    </div>
   </div>
-</div>
+</section>
 @endsection

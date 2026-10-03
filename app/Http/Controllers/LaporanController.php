@@ -20,10 +20,11 @@ class LaporanController extends Controller
         $end   = $request->end_date ?? now()->toDateString();
 
         $query = \App\Models\Transaksi::with('kasir')
-            ->whereBetween(DB::raw('DATE(created_at)'), [$start, $end])
-            ->orderByDesc('created_at');
+            ->completed()
+            ->whereBetween(DB::raw('DATE(tanggal)'), [$start, $end])
+            ->orderByDesc('tanggal');
 
-        $userLevel = auth()->user()->level;
+        $userLevel = strtolower((string) auth()->user()->level);
         if ($userLevel === 'staff' || $userLevel === 'kasir') {
             $query->whereHas('kasir', function($q) use ($userLevel) {
                 $q->where('level', $userLevel);
@@ -47,8 +48,8 @@ class LaporanController extends Controller
         $totalNilaiRanu = 0;
 
         if ($userLevel === 'admin') {
-            $totalNilaiWarkop = $laporan->filter(fn($t) => $t->kasir && in_array($t->kasir->level, ['kasir', 'admin']))->sum('total');
-            $totalNilaiRanu = $laporan->filter(fn($t) => $t->kasir && $t->kasir->level === 'staff')->sum('total');
+            $totalNilaiWarkop = $laporan->filter(fn($t) => $t->kasir && in_array(strtolower((string) $t->kasir->level), ['kasir', 'admin'], true))->sum('total');
+            $totalNilaiRanu = $laporan->filter(fn($t) => $t->kasir && strtolower((string) $t->kasir->level) === 'staff')->sum('total');
         }
 
         // 🔥 Tambahan: total uang per metode pembayaran
@@ -56,8 +57,9 @@ class LaporanController extends Controller
         $totalQris = $laporan->where('metode_pembayaran', 'qris')->sum('total');
 
         // === REKAP HARIAN (tanggal, penghasilan, jumlah transaksi) ===
-        $queryRekap = \App\Models\Transaksi::selectRaw("DATE(created_at) as tanggal, SUM(total) as penghasilan, COUNT(*) as jumlah_transaksi")
-            ->whereBetween(DB::raw('DATE(created_at)'), [$start, $end]);
+        $queryRekap = \App\Models\Transaksi::selectRaw("DATE(tanggal) as tanggal, SUM(total) as penghasilan, COUNT(*) as jumlah_transaksi")
+            ->completed()
+            ->whereBetween(DB::raw('DATE(tanggal)'), [$start, $end]);
 
         if ($userLevel === 'staff' || $userLevel === 'kasir') {
             $queryRekap->whereHas('kasir', function($q) use ($userLevel) {
@@ -65,7 +67,7 @@ class LaporanController extends Controller
             });
         }
 
-        $rekapHarian = $queryRekap->groupBy(DB::raw('DATE(created_at)'))
+        $rekapHarian = $queryRekap->groupBy(DB::raw('DATE(tanggal)'))
             ->orderByDesc('tanggal')
             ->get()
             ->map(function ($r) {
@@ -104,10 +106,11 @@ class LaporanController extends Controller
         $end   = $request->end_date ?? now()->toDateString();
 
         $query = \App\Models\Transaksi::with('kasir')
-            ->whereBetween(DB::raw('DATE(created_at)'), [$start, $end])
-            ->orderByDesc('created_at');
+            ->completed()
+            ->whereBetween(DB::raw('DATE(tanggal)'), [$start, $end])
+            ->orderByDesc('tanggal');
 
-        $userLevel = auth()->user()->level;
+        $userLevel = strtolower((string) auth()->user()->level);
         if ($userLevel === 'staff' || $userLevel === 'kasir') {
             $query->whereHas('kasir', function($q) use ($userLevel) {
                 $q->where('level', $userLevel);
@@ -140,7 +143,12 @@ class LaporanController extends Controller
 // Detail transaksi
     public function detail($kode)
     {
-        $transaksi = \App\Models\Transaksi::with(['items.barang', 'kasir'])->where('kode_transaksi', $kode)->first();
+        $transaksi = \App\Models\Transaksi::query()
+            ->completed()
+            ->visibleTo(auth()->user())
+            ->with(['items.barang', 'kasir'])
+            ->where('kode_transaksi', $kode)
+            ->first();
 
         if (!$transaksi) {
             return response()->json(['status' => false, 'message' => 'Transaksi tidak ditemukan.']);
@@ -148,10 +156,10 @@ class LaporanController extends Controller
 
         $items = $transaksi->items->map(function ($item) {
             return [
-                'nama' => $item->barang->nama ?? '-',
-                'qty' => $item->qty,
-                'harga' => $item->harga,
-                'subtotal' => $item->qty * $item->harga
+                'nama' => $item->nama ?? $item->barang->nama ?? '-',
+                'qty' => (int) $item->qty,
+                'harga' => (float) $item->harga,
+                'subtotal' => (float) ($item->subtotal ?? ($item->qty * $item->harga)),
             ];
         });
 
@@ -161,13 +169,16 @@ class LaporanController extends Controller
                 'kode' => $transaksi->kode_transaksi,
                 'kasir' => $transaksi->kasir->name ?? '-',
                 'level' => $transaksi->kasir->level ?? 'kasir',
-                'tanggal' => $transaksi->created_at->format('d/m/Y H:i'),
-                'total' => $transaksi->total,
+                'tanggal' => $transaksi->tanggal->format('d/m/Y H:i'),
+                'subtotal' => (float) $transaksi->subtotal,
+                'diskon' => (float) $transaksi->diskon,
+                'total' => (float) $transaksi->total,
+                'makan_dimana' => $transaksi->makan_dimana ?? 'Dine in',
                 'metode_pembayaran' => $transaksi->metode_pembayaran,
-                'catatan' => $transaksi->catatan,
+                'catatan' => $transaksi->catatan ?? '',
                 'nama_customer' => $transaksi->nama_customer ?? '-',
-                'items' => $items
-            ]
+                'items' => $items,
+            ],
         ]);
     }                   
 
@@ -182,10 +193,12 @@ class LaporanController extends Controller
             $end   = $request->end_date ?? now()->toDateString();
             $search = $request->search ?? '';
 
+            $userLevel = strtolower((string) auth()->user()->level);
+
             $query = \App\Models\TransaksiItem::with(['barang.category'])
-                ->whereHas('transaksi', function ($q) use ($start, $end) {
-                    $q->whereBetween(DB::raw('DATE(created_at)'), [$start, $end]);
-                    $userLevel = auth()->user()->level;
+                ->whereHas('transaksi', function ($q) use ($start, $end, $userLevel) {
+                    $q->completed()
+                        ->whereBetween(DB::raw('DATE(tanggal)'), [$start, $end]);
                     if ($userLevel === 'staff' || $userLevel === 'kasir') {
                         $q->whereHas('kasir', function($q2) use ($userLevel) {
                             $q2->where('level', $userLevel);
@@ -193,7 +206,7 @@ class LaporanController extends Controller
                     }
                 });
 
-            if (auth()->user()->level === 'staff') {
+            if (strtolower((string) auth()->user()->level) === 'staff') {
                 $query->whereHas('barang.category', function($q) {
                     $q->where('nama', 'like', '%Ranu Atas%');
                 });
