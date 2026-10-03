@@ -78,7 +78,7 @@
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('{{ asset('sw.js') }}').catch(() => {});
+        navigator.serviceWorker.register('{{ asset('sw.js') }}?v={{ file_exists(public_path('sw.js')) ? filemtime(public_path('sw.js')) : time() }}').catch(() => {});
       });
     }
   </script>

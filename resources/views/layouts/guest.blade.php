@@ -16,7 +16,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  @vite(['resources/css/app.css', 'resources/js/app.js'])
+  <link rel="stylesheet" href="{{ asset('assets/css/auth.css') }}?v={{ file_exists(public_path('assets/css/auth.css')) ? filemtime(public_path('assets/css/auth.css')) : time() }}">
+  <link rel="stylesheet" href="{{ asset('assets/css/edjaya-ui.css') }}?v={{ file_exists(public_path('assets/css/edjaya-ui.css')) ? filemtime(public_path('assets/css/edjaya-ui.css')) : time() }}">
+  @vite(['resources/js/app.js'])
 </head>
 <body>
   <a class="skip-link" href="#main-content">Lewati ke formulir</a>
@@ -41,7 +43,7 @@
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('{{ asset('sw.js') }}').catch(() => {});
+        navigator.serviceWorker.register('{{ asset('sw.js') }}?v={{ file_exists(public_path('sw.js')) ? filemtime(public_path('sw.js')) : time() }}').catch(() => {});
       });
     }
   </script>

@@ -6,8 +6,8 @@
   $brandName = $isStaff ? 'Ranu' : 'Djaya 590';
 @endphp
 
-<nav class="navbar navbar-expand-md app-navbar sticky-top" aria-label="Navigasi utama">
-  <div class="navbar-shell d-flex align-items-center w-100">
+<nav class="navbar navbar-expand-sm app-navbar sticky-top" aria-label="Navigasi utama">
+  <div class="navbar-shell d-flex align-items-center flex-nowrap w-100">
     <a href="{{ route('dashboard') }}" class="navbar-brand" aria-label="{{ $brandName }}, buka dashboard">
       <img src="{{ $logo }}" alt="Logo {{ $brandName }}" class="brand-logo" width="120" height="38">
       <span class="brand-copy" aria-hidden="true">
