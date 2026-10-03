@@ -4,12 +4,17 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="csrf-token" content="{{ csrf_token() }}">
-  <meta name="theme-color" content="#fff8f3">
+  <meta name="theme-color" content="#b42318">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="e-Djaya">
   <title>@yield('judul', 'e-Djaya')</title>
 
   <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('assets/img/favicon/favicon-32x32.png') }}">
   <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('assets/img/favicon/favicon-16x16.png') }}">
   <link rel="manifest" href="{{ asset('assets/img/favicon/site.webmanifest') }}">
+  <link rel="apple-touch-icon" href="{{ asset('assets/img/favicon/favicon-192x192.png') }}">
   <link rel="shortcut icon" href="{{ asset('assets/img/favicon/favicon.ico') }}">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -70,5 +75,12 @@
 
   @yield('scripts')
   @stack('scripts')
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('{{ asset('sw.js') }}').catch(() => {});
+      });
+    }
+  </script>
 </body>
 </html>

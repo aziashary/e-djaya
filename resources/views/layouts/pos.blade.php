@@ -4,10 +4,16 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="csrf-token" content="{{ csrf_token() }}">
-  <meta name="theme-color" content="#fff8f3">
+  <meta name="theme-color" content="#b42318">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="e-Djaya">
   <title>@yield('judul', 'POS e-Djaya')</title>
 
   <link rel="icon" type="image/x-icon" href="{{ asset('assets/img/favicon/favicon.ico') }}">
+  <link rel="manifest" href="{{ asset('assets/img/favicon/site.webmanifest') }}">
+  <link rel="apple-touch-icon" href="{{ asset('assets/img/favicon/favicon-192x192.png') }}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -227,6 +233,13 @@
         }
       }
     });
+  </script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('{{ asset('sw.js') }}').catch(() => {});
+      });
+    }
   </script>
 </body>
 </html>

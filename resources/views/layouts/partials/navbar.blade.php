@@ -6,7 +6,7 @@
   $brandName = $isStaff ? 'Ranu' : 'Djaya 590';
 @endphp
 
-<nav class="navbar navbar-expand-xl app-navbar sticky-top" aria-label="Navigasi utama">
+<nav class="navbar navbar-expand-md app-navbar sticky-top" aria-label="Navigasi utama">
   <div class="navbar-shell d-flex align-items-center w-100">
     <a href="{{ route('dashboard') }}" class="navbar-brand" aria-label="{{ $brandName }}, buka dashboard">
       <img src="{{ $logo }}" alt="Logo {{ $brandName }}" class="brand-logo" width="120" height="38">
@@ -24,16 +24,16 @@
     <div class="collapse navbar-collapse" id="navbarMenu">
       <ul class="navbar-nav ms-auto">
         <li class="nav-item">
-          <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}" @if(request()->routeIs('dashboard')) aria-current="page" @endif>
+          <a class="nav-link nav-icon-tablet {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}" title="Dashboard" aria-label="Dashboard" @if(request()->routeIs('dashboard')) aria-current="page" @endif>
             <i class="bx bx-grid-alt" aria-hidden="true"></i>
-            Dashboard
+            <span class="nav-text">Dashboard</span>
           </a>
         </li>
 
         <li class="nav-item">
-          <a class="nav-link nav-pos {{ request()->routeIs('pos.index') ? 'active' : '' }}" href="{{ route('pos.index') }}" @if(request()->routeIs('pos.index')) aria-current="page" @endif>
+          <a class="nav-link nav-pos nav-icon-tablet {{ request()->routeIs('pos.index') ? 'active' : '' }}" href="{{ route('pos.index') }}" title="Buka POS" aria-label="Buka POS" @if(request()->routeIs('pos.index')) aria-current="page" @endif>
             <i class="bx bx-cart" aria-hidden="true"></i>
-            Buka POS
+            <span class="nav-text">Buka POS</span>
           </a>
         </li>
 
