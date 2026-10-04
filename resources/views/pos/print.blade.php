@@ -30,7 +30,9 @@
   $receiptCustomer = $transaksi->nama_customer ?? '-';
   $receiptOrderType = $transaksi->makan_dimana ?? '-';
   $receiptTotal = 'Rp ' . number_format($transaksi->total, 0, ',', '.');
-  $receiptPaymentMethod = strtoupper($transaksi->metode_pembayaran);
+  $receiptPaymentMethod = $transaksi->status === \App\Models\Transaksi::STATUS_PENDING
+    ? 'BELUM DIBAYAR'
+    : strtoupper($transaksi->metode_pembayaran);
   $receiptNote = !empty($transaksi->catatan)
     ? trim(preg_replace('/\r|\n/', ' ', $transaksi->catatan))
     : null;
@@ -51,6 +53,9 @@
 
   content.push({ type: 'divider' });
   content.push({ type: 'row', left: 'Kode', right: @json($transaksi->kode_transaksi) });
+  @if($transaksi->status === \App\Models\Transaksi::STATUS_PENDING)
+    content.push({ type: 'row', left: 'Status Transaksi', right: 'Open bill', bold: true });
+  @endif
   content.push({ type: 'row', left: 'Tanggal', right: @json($receiptDate) });
   content.push({ type: 'row', left: 'Kasir', right: @json($receiptCashier) });
   content.push({ type: 'row', left: 'Atas Nama', right: @json($receiptCustomer) });

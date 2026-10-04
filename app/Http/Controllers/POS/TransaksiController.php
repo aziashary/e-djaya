@@ -137,7 +137,7 @@ class TransaksiController extends Controller
     public function print(string $kode)
     {
         $transaksi = Transaksi::query()
-            ->completed()
+            ->whereIn('status', [Transaksi::STATUS_COMPLETED, Transaksi::STATUS_PENDING])
             ->visibleTo(Auth::user())
             ->with(['items', 'kasir'])
             ->where('kode_transaksi', $kode)
@@ -173,7 +173,7 @@ class TransaksiController extends Controller
     public function detail(string $kode): JsonResponse
     {
         $transaksi = Transaksi::query()
-            ->completed()
+            ->whereIn('status', [Transaksi::STATUS_COMPLETED, Transaksi::STATUS_PENDING])
             ->visibleTo(Auth::user())
             ->with(['items.barang', 'kasir'])
             ->where('kode_transaksi', $kode)
@@ -197,6 +197,7 @@ class TransaksiController extends Controller
             'status' => true,
             'data' => [
                 'kode' => $transaksi->kode_transaksi,
+                'status' => $transaksi->status,
                 'tanggal' => $transaksi->tanggal->format('d/m/Y H:i'),
                 'kasir' => $transaksi->kasir->name ?? '-',
                 'level' => $transaksi->kasir->level ?? 'kasir',

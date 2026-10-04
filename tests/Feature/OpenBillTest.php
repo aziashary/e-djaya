@@ -74,7 +74,9 @@ class OpenBillTest extends TestCase
         $this->actingAs($secondCashier)
             ->get(route('pos.open-bills'))
             ->assertOk()
-            ->assertSee('Meja Teras');
+            ->assertSee('Meja Teras')
+            ->assertSee('btn-detail')
+            ->assertSee('data-kode="' . $code . '"', false);
 
         $this->actingAs($secondCashier)
             ->putJson(route('pos.open-bills.update', $code), $this->payload($product, quantity: 2))
@@ -104,6 +106,33 @@ class OpenBillTest extends TestCase
             ->get(route('pos.open-bills'))
             ->assertOk()
             ->assertDontSee('Meja Teras');
+    }
+
+    public function test_pending_status_is_available_in_details_and_only_printed_for_open_bills(): void
+    {
+        $admin = User::factory()->create(['level' => 'admin']);
+        $product = $this->createProduct();
+        $pending = $this->createTransaction($admin, $product, Transaksi::STATUS_PENDING, 20000);
+        $completed = $this->createTransaction($admin, $product, Transaksi::STATUS_COMPLETED, 30000);
+
+        $this->actingAs($admin)
+            ->getJson(route('pos.detail', $pending->kode_transaksi))
+            ->assertOk()
+            ->assertJsonPath('data.status', Transaksi::STATUS_PENDING);
+
+        $this->getJson(route('laporan.detail', $pending->kode_transaksi))
+            ->assertOk()
+            ->assertJsonPath('data.status', Transaksi::STATUS_PENDING);
+
+        $this->get(route('pos.print', $pending->kode_transaksi))
+            ->assertOk()
+            ->assertSee('Status Transaksi')
+            ->assertSee('Open bill');
+
+        $this->get(route('pos.print', $completed->kode_transaksi))
+            ->assertOk()
+            ->assertDontSee('Status Transaksi')
+            ->assertDontSee('Open bill');
     }
 
     public function test_pending_and_canceled_bills_are_excluded_from_sales_totals(): void

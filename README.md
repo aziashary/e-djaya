@@ -19,10 +19,11 @@
 
 ### Alur open bill
 
-1. Tambahkan produk di halaman POS, lalu pilih **Simpan open bill**.
-2. Isi nama pelanggan atau meja. Jenis pesanan, catatan, dan diskon ikut tersimpan.
+1. Tambahkan produk di halaman POS, lalu pilih **Lanjut ke pembayaran**.
+2. Isi nama pelanggan atau meja, kemudian pilih **Simpan open bill** di modal pembayaran. Jenis pesanan, catatan, dan diskon ikut tersimpan.
 3. Buka menu **Open bill** untuk melanjutkan isi keranjang, langsung membayar, atau membatalkan bill.
-4. Bill baru masuk ke dashboard dan laporan penjualan setelah pembayaran selesai. Bill `pending` dan `batal` tidak dihitung sebagai omzet.
+4. Struk dan detail bill berstatus `pending` menampilkan status **Open bill** serta keterangan belum dibayar. Status tidak ditampilkan setelah transaksi selesai.
+5. Bill baru masuk ke dashboard dan laporan penjualan setelah pembayaran selesai. Bill `pending` dan `batal` tidak dihitung sebagai omzet.
 
 ## 💻 Teknologi yang Digunakan
 

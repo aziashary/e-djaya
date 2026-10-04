@@ -129,9 +129,6 @@
         <strong id="cart-subtotal" class="cart-total">Rp 0</strong>
       </div>
       <div class="d-grid gap-2">
-        <button class="btn btn-outline-primary btn-disabled" type="button" id="btn-open-bill" disabled>
-          {{ $openBill ? 'Simpan perubahan bill' : 'Simpan open bill' }}
-        </button>
         <button class="btn btn-pay btn-disabled" type="button" id="btn-open-bayar" disabled>
           Lanjut ke pembayaran
         </button>
@@ -255,7 +252,7 @@ function setPaymentBusy(isBusy) {
     document.getElementById('btn-save-open-bill'),
     document.getElementById('btn-bayar-tanpa-cetak'),
     document.getElementById('btn-konfirmasi-bayar')
-  ].forEach((button) => {
+  ].filter(Boolean).forEach((button) => {
     button.disabled = isBusy;
     button.setAttribute('aria-busy', String(isBusy));
   });
@@ -305,11 +302,9 @@ function renderCart() {
 }
 
 function toggleCartActions(enabled) {
-  ['btn-open-bill', 'btn-open-bayar'].forEach((id) => {
-    const button = document.getElementById(id);
-    button.disabled = !enabled;
-    button.classList.toggle('btn-disabled', !enabled);
-  });
+  const button = document.getElementById('btn-open-bayar');
+  button.disabled = !enabled;
+  button.classList.toggle('btn-disabled', !enabled);
 }
 
 function updatePaymentPreview() {
@@ -479,7 +474,7 @@ window.getPosFullscreenState = () => ({
   }
 });
 
-$('#btn-open-bill, #btn-open-bayar').on('click', openTransactionDetails);
+$('#btn-open-bayar').on('click', openTransactionDetails);
 $('#diskon').on('input', updatePaymentPreview);
 $('#btn-save-open-bill').on('click', saveOpenBill);
 $('#btn-bayar-tanpa-cetak').on('click', () => submitTransaction(false));

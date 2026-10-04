@@ -144,7 +144,10 @@ class LaporanController extends Controller
     public function detail($kode)
     {
         $transaksi = \App\Models\Transaksi::query()
-            ->completed()
+            ->whereIn('status', [
+                \App\Models\Transaksi::STATUS_COMPLETED,
+                \App\Models\Transaksi::STATUS_PENDING,
+            ])
             ->visibleTo(auth()->user())
             ->with(['items.barang', 'kasir'])
             ->where('kode_transaksi', $kode)
@@ -167,6 +170,7 @@ class LaporanController extends Controller
             'status' => true,
             'data' => [
                 'kode' => $transaksi->kode_transaksi,
+                'status' => $transaksi->status,
                 'kasir' => $transaksi->kasir->name ?? '-',
                 'level' => $transaksi->kasir->level ?? 'kasir',
                 'tanggal' => $transaksi->tanggal->format('d/m/Y H:i'),

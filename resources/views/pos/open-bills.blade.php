@@ -59,6 +59,12 @@
                 <td class="text-end fw-bold">Rp {{ number_format($bill->total, 0, ',', '.') }}</td>
                 <td>
                   <div class="d-flex flex-wrap justify-content-end gap-2">
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-outline-primary btn-detail"
+                      data-kode="{{ $bill->kode_transaksi }}"
+                      aria-label="Buka detail transaksi {{ $bill->kode_transaksi }}"
+                    >Detail</button>
                     <a href="{{ route('pos.index', ['bill' => $bill->kode_transaksi]) }}" class="btn btn-sm btn-outline-secondary">Lanjutkan</a>
                     <a href="{{ route('pos.index', ['bill' => $bill->kode_transaksi, 'pay' => 1]) }}" class="btn btn-sm btn-primary">Bayar</a>
                     <button
@@ -100,6 +106,29 @@
     </div>
   </div>
 </div>
+
+<div class="modal fade receipt-modal" id="modalDetail" tabindex="-1" aria-labelledby="modalDetailLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered receipt-modal-dialog">
+    <div class="modal-content receipt-paper-modal">
+      <div class="modal-header receipt-modal-header">
+        <div>
+          <span class="receipt-badge">Salinan struk</span>
+          <h2 class="modal-title visually-hidden" id="modalDetailLabel">Detail struk</h2>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup detail struk"></button>
+      </div>
+      <div class="modal-body receipt-modal-body">
+        <div id="strukBody" class="receipt-paper-sheet" role="status" aria-live="polite">
+          <div class="receipt-status-msg">Memuat detail transaksi...</div>
+        </div>
+      </div>
+      <div class="modal-footer receipt-modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Tutup</button>
+        <button type="button" id="btnPrintStruk" class="btn btn-primary">Cetak struk</button>
+      </div>
+    </div>
+  </div>
+</div>
 @endsection
 
 @push('scripts')
@@ -109,6 +138,174 @@ document.querySelectorAll('.btn-cancel-bill').forEach((button) => {
     document.getElementById('cancelBillForm').action = button.dataset.cancelUrl;
     document.getElementById('cancelBillName').textContent = button.dataset.billLabel;
   });
+});
+
+const formatRupiah = (val) => 'Rp ' + Number(val || 0).toLocaleString('id-ID');
+
+function escapeHtml(str) {
+  return String(str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+$(document).on('click', '.btn-detail', function() {
+  const code = $(this).data('kode');
+  const body = $('#strukBody');
+  body.html('<div class="receipt-status-msg">Memuat detail transaksi...</div>');
+  $('#btnPrintStruk').attr('data-kode', code).data('kode', code);
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('modalDetail')).show();
+
+  $.ajax({
+    url: `/pos/detail/${code}`,
+    type: 'GET',
+    success: (response) => response.status ? renderReceipt(response.data) : body.html('<div class="receipt-status-msg receipt-error">Data transaksi tidak ditemukan.</div>'),
+    error: () => body.html('<div class="receipt-status-msg receipt-error">Detail transaksi gagal dimuat. Tutup dialog, lalu coba lagi.</div>')
+  });
+});
+
+function renderReceipt(data) {
+  const isStaff = String(data.level || '').toLowerCase() === 'staff';
+  const storeName = isStaff ? 'Kopi Ranu' : 'Warkop Djaya 590';
+  const storeAddress = isStaff
+    ? 'Jl. Raya Puncak - Gadog, Tugu Selatan, Bogor'
+    : 'Jln Raya Puncak No. 590';
+
+  const orderType = data.makan_dimana === 'Takeaway' ? 'Dibawa pulang' : 'Makan di tempat';
+  const isPending = String(data.status || '').toLowerCase() === 'pending';
+  const isCash = String(data.metode_pembayaran || '').toLowerCase() === 'cash';
+  const paymentMethod = isPending
+    ? 'Belum dibayar'
+    : (isCash ? 'Tunai (Cash)' : String(data.metode_pembayaran || '-').toUpperCase());
+  const statusHtml = isPending
+    ? `
+      <div class="receipt-meta-row">
+        <span class="receipt-meta-label">Status transaksi</span>
+        <span class="receipt-meta-val">Open bill</span>
+      </div>
+    `
+    : '';
+
+  let itemsHtml = '';
+  (data.items || []).forEach((item) => {
+    const itemSubtotal = item.subtotal || (item.qty * item.harga);
+    itemsHtml += `
+      <div class="receipt-item-row">
+        <div class="receipt-item-name">${escapeHtml(item.nama)}</div>
+        <div class="receipt-item-calc">
+          <span class="receipt-item-qty">${item.qty} x ${formatRupiah(item.harga)}</span>
+          <span class="receipt-item-subtotal">${formatRupiah(itemSubtotal)}</span>
+        </div>
+      </div>
+    `;
+  });
+
+  const subtotal = Number(data.subtotal || 0) || Number(data.total || 0);
+  const discount = Number(data.diskon || 0);
+  const total = Number(data.total || 0);
+
+  let discountHtml = '';
+  if (discount > 0) {
+    const discountAmount = subtotal * (discount / 100);
+    discountHtml = `
+      <div class="receipt-calc-row">
+        <span>Subtotal</span>
+        <span>${formatRupiah(subtotal)}</span>
+      </div>
+      <div class="receipt-calc-row receipt-calc-discount">
+        <span>Diskon (${discount}%)</span>
+        <span>-${formatRupiah(discountAmount)}</span>
+      </div>
+    `;
+  }
+
+  let noteHtml = '';
+  if (data.catatan && String(data.catatan).trim()) {
+    noteHtml = `
+      <div class="receipt-divider"></div>
+      <div class="receipt-note-box">
+        <span class="receipt-note-label">Catatan:</span>
+        <span class="receipt-note-text">${escapeHtml(String(data.catatan).trim())}</span>
+      </div>
+    `;
+  }
+
+  const html = `
+    <div class="receipt-header-center">
+      <div class="receipt-brand-title">${escapeHtml(storeName)}</div>
+      <div class="receipt-brand-address">${escapeHtml(storeAddress)}</div>
+    </div>
+
+    <div class="receipt-divider"></div>
+
+    <div class="receipt-meta-grid">
+      <div class="receipt-meta-row">
+        <span class="receipt-meta-label">No. Transaksi</span>
+        <span class="receipt-meta-val receipt-code">${escapeHtml(data.kode)}</span>
+      </div>
+      ${statusHtml}
+      <div class="receipt-meta-row">
+        <span class="receipt-meta-label">Waktu</span>
+        <span class="receipt-meta-val">${escapeHtml(data.tanggal)}</span>
+      </div>
+      <div class="receipt-meta-row">
+        <span class="receipt-meta-label">Kasir</span>
+        <span class="receipt-meta-val">${escapeHtml(data.kasir)}</span>
+      </div>
+      ${data.nama_customer && data.nama_customer !== '-' ? `
+        <div class="receipt-meta-row">
+          <span class="receipt-meta-label">Pelanggan</span>
+          <span class="receipt-meta-val">${escapeHtml(data.nama_customer)}</span>
+        </div>
+      ` : ''}
+      <div class="receipt-meta-row">
+        <span class="receipt-meta-label">Pesanan</span>
+        <span class="receipt-meta-val">${escapeHtml(orderType)}</span>
+      </div>
+    </div>
+
+    <div class="receipt-divider"></div>
+
+    <div class="receipt-items-list">
+      ${itemsHtml}
+    </div>
+
+    <div class="receipt-divider"></div>
+
+    <div class="receipt-totals-block">
+      ${discountHtml}
+      <div class="receipt-total-main-row">
+        <span>TOTAL</span>
+        <span class="receipt-total-value">${formatRupiah(total)}</span>
+      </div>
+      <div class="receipt-calc-row receipt-payment-row">
+        <span>Metode Bayar</span>
+        <span class="receipt-payment-badge">${escapeHtml(paymentMethod)}</span>
+      </div>
+    </div>
+
+    ${noteHtml}
+
+    <div class="receipt-divider"></div>
+
+    <div class="receipt-footer-center">
+      <p class="receipt-footer-thanks">Terima kasih atas kunjungan Anda!</p>
+      <p class="receipt-footer-sub">${isPending ? 'Pembayaran belum diselesaikan' : 'Simpan struk ini sebagai bukti pembayaran'}</p>
+    </div>
+  `;
+
+  $('#strukBody').html(html);
+}
+
+$('#btnPrintStruk').on('click', function() {
+  const code = $(this).data('kode');
+  if (!code) {
+    $('#strukBody').text('Kode transaksi tidak tersedia. Tutup dialog, lalu coba lagi.');
+    return;
+  }
+  window.open(`/pos/print/${code}`, '_blank');
 });
 </script>
 @endpush

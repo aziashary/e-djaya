@@ -172,8 +172,19 @@ document.addEventListener('DOMContentLoaded', () => {
       : 'Jln Raya Puncak No. 590';
 
     const orderType = data.makan_dimana === 'Takeaway' ? 'Dibawa pulang' : 'Makan di tempat';
+    const isPending = String(data.status || '').toLowerCase() === 'pending';
     const isCash = String(data.metode_pembayaran || '').toLowerCase() === 'cash';
-    const paymentMethod = isCash ? 'Tunai (Cash)' : String(data.metode_pembayaran || '-').toUpperCase();
+    const paymentMethod = isPending
+      ? 'Belum dibayar'
+      : (isCash ? 'Tunai (Cash)' : String(data.metode_pembayaran || '-').toUpperCase());
+    const statusHtml = isPending
+      ? `
+        <div class="receipt-meta-row">
+          <span class="receipt-meta-label">Status transaksi</span>
+          <span class="receipt-meta-val">Open bill</span>
+        </div>
+      `
+      : '';
 
     let itemsHtml = '';
     (data.items || []).forEach((item) => {
@@ -232,6 +243,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <span class="receipt-meta-label">No. Transaksi</span>
           <span class="receipt-meta-val receipt-code">${escapeHtml(data.kode)}</span>
         </div>
+        ${statusHtml}
         <div class="receipt-meta-row">
           <span class="receipt-meta-label">Waktu</span>
           <span class="receipt-meta-val">${escapeHtml(data.tanggal)}</span>
@@ -278,7 +290,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       <div class="receipt-footer-center">
         <p class="receipt-footer-thanks">Terima kasih atas kunjungan Anda!</p>
-        <p class="receipt-footer-sub">Simpan struk ini sebagai bukti pembayaran</p>
+        <p class="receipt-footer-sub">${isPending ? 'Pembayaran belum diselesaikan' : 'Simpan struk ini sebagai bukti pembayaran'}</p>
       </div>
     `;
 
