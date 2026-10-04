@@ -12,7 +12,8 @@ class DashboardController extends Controller
     public function index()
     {
         $hari_ini = Carbon::today();
-        $bulan_ini = Carbon::now()->month;
+        $awal_bulan = Carbon::now()->startOfMonth();
+        $akhir_hari_ini = Carbon::now()->endOfDay();
 
         $userLevel = strtolower((string) auth()->user()->level);
         $queryBase = Transaksi::query()->completed();
@@ -24,11 +25,11 @@ class DashboardController extends Controller
 
         // Hitung total jumlah transaksi (hitung item, bukan nominal)
         $transaksi_hari_ini = (clone $queryBase)->whereDate('tanggal', $hari_ini)->count();
-        $transaksi_bulan_ini = (clone $queryBase)->whereMonth('tanggal', $bulan_ini)->count();
+        $transaksi_bulan_ini = (clone $queryBase)->whereBetween('tanggal', [$awal_bulan, $akhir_hari_ini])->count();
 
         // Hitung total nilai penjualan (nominal)
         $nilai_hari_ini = (clone $queryBase)->whereDate('tanggal', $hari_ini)->sum('total');
-        $nilai_bulan_ini = (clone $queryBase)->whereMonth('tanggal', $bulan_ini)->sum('total');
+        $nilai_bulan_ini = (clone $queryBase)->whereBetween('tanggal', [$awal_bulan, $akhir_hari_ini])->sum('total');
 
         // Chart penjualan 7 hari terakhir
         $chart = (clone $queryBase)->selectRaw('DATE(tanggal) as tanggal, SUM(total) as total')
@@ -51,8 +52,8 @@ class DashboardController extends Controller
         if ($userLevel === 'admin') {
             $nilai_hari_ini_warkop = Transaksi::query()->completed()->whereDate('tanggal', $hari_ini)->whereHas('kasir', fn($q) => $q->whereIn('level', ['kasir', 'admin']))->sum('total');
             $nilai_hari_ini_ranu = Transaksi::query()->completed()->whereDate('tanggal', $hari_ini)->whereHas('kasir', fn($q) => $q->where('level', 'staff'))->sum('total');
-            $nilai_bulan_ini_warkop = Transaksi::query()->completed()->whereMonth('tanggal', $bulan_ini)->whereHas('kasir', fn($q) => $q->whereIn('level', ['kasir', 'admin']))->sum('total');
-            $nilai_bulan_ini_ranu = Transaksi::query()->completed()->whereMonth('tanggal', $bulan_ini)->whereHas('kasir', fn($q) => $q->where('level', 'staff'))->sum('total');
+            $nilai_bulan_ini_warkop = Transaksi::query()->completed()->whereBetween('tanggal', [$awal_bulan, $akhir_hari_ini])->whereHas('kasir', fn($q) => $q->whereIn('level', ['kasir', 'admin']))->sum('total');
+            $nilai_bulan_ini_ranu = Transaksi::query()->completed()->whereBetween('tanggal', [$awal_bulan, $akhir_hari_ini])->whereHas('kasir', fn($q) => $q->where('level', 'staff'))->sum('total');
         }
 
         return view('pages.dashboard', compact(

@@ -119,7 +119,9 @@ class OpenBillTest extends TestCase
             ->get(route('dashboard'))
             ->assertOk()
             ->assertViewHas('transaksi_hari_ini', 1)
-            ->assertViewHas('nilai_hari_ini', fn ($value) => (float) $value === 30000.0);
+            ->assertViewHas('nilai_hari_ini', fn ($value) => (float) $value === 30000.0)
+            ->assertViewHas('transaksi_bulan_ini', 1)
+            ->assertViewHas('nilai_bulan_ini', fn ($value) => (float) $value === 30000.0);
 
         $this->get(route('laporan.transaksi', ['start_date' => $date, 'end_date' => $date]))
             ->assertOk()
