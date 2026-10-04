@@ -172,6 +172,43 @@ class OpenBillTest extends TestCase
             });
     }
 
+    public function test_transaction_history_defaults_to_latest_and_supports_single_date_filter(): void
+    {
+        $admin = User::factory()->create(['level' => 'admin']);
+        $product = $this->createProduct();
+
+        $olderTransaction = $this->createTransaction($admin, $product, Transaksi::STATUS_COMPLETED, 15000);
+        $olderTransaction->update(['tanggal' => now()->subDays(40)]);
+
+        $todayTransaction = $this->createTransaction($admin, $product, Transaksi::STATUS_COMPLETED, 25000);
+        $todayTransaction->update(['tanggal' => now()]);
+
+        $this->actingAs($admin)
+            ->get(route('pos.riwayat'))
+            ->assertOk()
+            ->assertDontSee('Rentang tanggal')
+            ->assertSee('Filter tanggal transaksi')
+            ->assertSee($todayTransaction->kode_transaksi)
+            ->assertSee($olderTransaction->kode_transaksi);
+
+        $this->get(route('pos.riwayat', ['tanggal' => now()->toDateString()]))
+            ->assertOk()
+            ->assertSee($todayTransaction->kode_transaksi)
+            ->assertDontSee($olderTransaction->kode_transaksi);
+
+        $this->get(route('laporan.transaksi'))
+            ->assertOk()
+            ->assertDontSee('Rentang tanggal')
+            ->assertSee('Filter tanggal transaksi')
+            ->assertSee($todayTransaction->kode_transaksi)
+            ->assertSee($olderTransaction->kode_transaksi);
+
+        $this->get(route('laporan.transaksi', ['tanggal' => now()->subDays(40)->toDateString()]))
+            ->assertOk()
+            ->assertSee($olderTransaction->kode_transaksi)
+            ->assertDontSee($todayTransaction->kode_transaksi);
+    }
+
     private function payload(Barang $product, int $quantity = 1, string $customer = 'Meja 4'): array
     {
         return [

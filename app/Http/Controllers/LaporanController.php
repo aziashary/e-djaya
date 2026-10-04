@@ -100,16 +100,22 @@ class LaporanController extends Controller
 
 
     // Riwayat Transaksi
-        public function transaksi(Request $request)
+    public function transaksi(Request $request)
     {
-        $start = $request->start_date ?? now()->subDays(7)->toDateString();
-        $end   = $request->end_date ?? now()->toDateString();
-
         $query = \App\Models\Transaksi::with('kasir')
             ->completed()
-            ->whereBetween(DB::raw('DATE(tanggal)'), [$start, $end])
-            ->orderByDesc('tanggal');
+            ->orderByDesc('tanggal')
+            ->orderByDesc('id');
 
+        $tanggal = $request->input('tanggal');
+
+        if ($request->filled('tanggal')) {
+            $query->whereDate('tanggal', $tanggal);
+        } elseif ($request->filled('start_date') && $request->filled('end_date')) {
+            $start = $request->start_date;
+            $end   = $request->end_date;
+            $query->whereBetween(DB::raw('DATE(tanggal)'), [$start, $end]);
+        }
         $userLevel = strtolower((string) auth()->user()->level);
         if ($userLevel === 'staff' || $userLevel === 'kasir') {
             $query->whereHas('kasir', function($q) use ($userLevel) {
@@ -135,7 +141,7 @@ class LaporanController extends Controller
         $totalQris = $laporan->where('metode_pembayaran', 'qris')->sum('total');
 
         return view('laporan.transaksi', compact(
-            'laporan', 'start', 'end', 'totalTransaksi', 'totalNilai', 'totalCash', 'totalQris'
+            'laporan', 'tanggal', 'totalTransaksi', 'totalNilai', 'totalCash', 'totalQris'
         ));
     }
 

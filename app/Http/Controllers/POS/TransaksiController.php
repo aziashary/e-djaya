@@ -148,25 +148,28 @@ class TransaksiController extends Controller
 
     public function riwayat(Request $request)
     {
-        $end = $request->end_date ? \Carbon\Carbon::parse($request->end_date) : now();
-        $start = $request->start_date ? \Carbon\Carbon::parse($request->start_date) : now()->subDays(7);
-
-        if ($start->diffInMonths($end) > 2) {
-            $start = $end->copy()->subMonths(2);
-        }
-
-        $transaksi = Transaksi::query()
+        $query = Transaksi::query()
             ->completed()
             ->visibleTo(Auth::user())
             ->with('kasir')
-            ->whereBetween('tanggal', [$start->copy()->startOfDay(), $end->copy()->endOfDay()])
             ->orderByDesc('tanggal')
-            ->get();
+            ->orderByDesc('id');
+
+        $tanggal = $request->input('tanggal');
+
+        if ($request->filled('tanggal')) {
+            $query->whereDate('tanggal', $tanggal);
+        } elseif ($request->filled('start_date') && $request->filled('end_date')) {
+            $start = \Carbon\Carbon::parse($request->start_date);
+            $end = \Carbon\Carbon::parse($request->end_date);
+            $query->whereBetween('tanggal', [$start->copy()->startOfDay(), $end->copy()->endOfDay()]);
+        }
+
+        $transaksi = $query->get();
 
         return view('pos.riwayat', [
             'transaksi' => $transaksi,
-            'start' => $start->format('Y-m-d'),
-            'end' => $end->format('Y-m-d'),
+            'tanggal' => $tanggal,
         ]);
     }
 

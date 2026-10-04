@@ -42,8 +42,7 @@ class DashboardController extends Controller
         $chart_values = $chart->pluck('total');
 
         // Transaksi terbaru
-        $transaksi_terbaru = (clone $queryBase)->with('kasir')->latest('tanggal')->take(5)->get();
-
+        $transaksi_terbaru = (clone $queryBase)->with('kasir')->orderByDesc('tanggal')->orderByDesc('id')->take(5)->get();
         $nilai_hari_ini_warkop = 0;
         $nilai_hari_ini_ranu = 0;
         $nilai_bulan_ini_warkop = 0;

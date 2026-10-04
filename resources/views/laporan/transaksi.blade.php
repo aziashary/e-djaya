@@ -8,45 +8,55 @@
     <div class="page-heading">
       <p class="page-kicker">Analisis operasional</p>
       <h1 id="transaction-report-title" class="page-title">Riwayat transaksi</h1>
-      <p class="page-description">Cari transaksi, periksa struk, cetak ulang, atau hapus transaksi yang tidak diperlukan.</p>
-    </div>
+      <p class="page-description">Daftar transaksi terbaru diurutkan dari yang paling baru. Gunakan filter tanggal atau pencarian jika diperlukan.</p>
   </header>
 
   <form class="card card-body mb-4" method="GET" action="{{ route('laporan.transaksi') }}">
     <div class="row g-3 align-items-end">
       <div class="col-lg-4">
-        <label for="date-range" class="form-label">Rentang tanggal</label>
-        <input type="text" id="date-range" value="{{ $start }} sampai {{ $end }}" class="form-control" readonly>
-        <input type="hidden" name="start_date" value="{{ $start }}">
-        <input type="hidden" name="end_date" value="{{ $end }}">
+        <label for="tanggal" class="form-label">Filter tanggal transaksi</label>
+        <input type="text" id="tanggal" name="tanggal" value="{{ $tanggal ?? '' }}" class="form-control" placeholder="Pilih tanggal (kosongkan untuk semua)" readonly>
       </div>
       <div class="col-lg-5">
         <label for="search" class="form-label">Kode transaksi atau kasir</label>
-        <input type="search" id="search" name="search" value="{{ request('search') }}" class="form-control" placeholder="Cari transaksi" autocomplete="off">
+        <input type="search" id="search" name="search" value="{{ request('search') }}" class="form-control" placeholder="Cari kode transaksi atau kasir" autocomplete="off">
       </div>
-      <div class="col-lg-3 d-grid">
-        <button type="submit" class="btn btn-primary">Tampilkan transaksi</button>
+      <div class="col-lg-3 d-flex flex-wrap gap-2">
+        <button type="submit" class="btn btn-primary flex-grow-1">Filter</button>
+        @if(!empty($tanggal) || request('search'))
+          <a href="{{ route('laporan.transaksi') }}" class="btn btn-outline-secondary">Reset</a>
+        @endif
       </div>
     </div>
   </form>
 
-  <div class="alert alert-info mb-3" role="status">
-    <strong>Periode:</strong> {{ \Carbon\Carbon::parse($start)->translatedFormat('d F Y') }} sampai {{ \Carbon\Carbon::parse($end)->translatedFormat('d F Y') }}
-    @if(request('search'))
-      <span class="d-block mt-1"><strong>Pencarian:</strong> {{ request('search') }}</span>
-    @endif
-  </div>
+  @if(!empty($tanggal) || request('search'))
+    <div class="alert alert-info mb-3" role="status">
+      @if(!empty($tanggal))
+        <strong>Tanggal:</strong> {{ \Carbon\Carbon::parse($tanggal)->translatedFormat('d F Y') }}
+      @endif
+      @if(request('search'))
+        <span class="@if(!empty($tanggal)) d-block mt-1 @endif"><strong>Pencarian:</strong> {{ request('search') }}</span>
+      @endif
+    </div>
+  @endif
 
   <div class="card task-panel">
     <div class="card-header">
       <h2 class="h5 fw-bold mb-1">Daftar transaksi</h2>
-      <p class="small text-muted mb-0">{{ number_format($laporan->count(), 0, ',', '.') }} transaksi pada hasil filter.</p>
+      <p class="small text-muted mb-0">
+        {{ number_format($laporan->count(), 0, ',', '.') }} transaksi {{ !empty($tanggal) ? 'pada tanggal ' . \Carbon\Carbon::parse($tanggal)->translatedFormat('d F Y') : 'terbaru' }}.
+      </p>
     </div>
 
     @if($laporan->isEmpty())
       <div class="empty-state" role="status">
         <strong>Transaksi tidak ditemukan</strong>
-        Ubah rentang tanggal atau kata pencarian untuk melihat hasil lain.
+        @if(!empty($tanggal) || request('search'))
+          Ubah filter tanggal atau kata pencarian untuk melihat hasil lain.
+        @else
+          Belum ada transaksi yang tercatat di sistem.
+        @endif
       </div>
     @else
       <div class="table-responsive" tabindex="0" aria-label="Tabel riwayat transaksi, geser jika diperlukan">
@@ -119,23 +129,21 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-  const range = document.getElementById('date-range');
-  const picker = new Litepicker({
-    element: range,
-    singleMode: false,
-    numberOfMonths: window.innerWidth < 768 ? 1 : 2,
-    numberOfColumns: window.innerWidth < 768 ? 1 : 2,
-    format: 'YYYY-MM-DD',
-    startDate: '{{ $start }}',
-    endDate: '{{ $end }}',
-    autoApply: true,
-    lang: 'id-ID'
-  });
-  picker.on('selected', (startDate, endDate) => {
-    document.querySelector('[name="start_date"]').value = startDate.format('YYYY-MM-DD');
-    document.querySelector('[name="end_date"]').value = endDate.format('YYYY-MM-DD');
-    range.value = `${startDate.format('YYYY-MM-DD')} sampai ${endDate.format('YYYY-MM-DD')}`;
-  });
+  const tanggalInput = document.getElementById('tanggal');
+  if (tanggalInput) {
+    new Litepicker({
+      element: tanggalInput,
+      singleMode: true,
+      numberOfMonths: 1,
+      numberOfColumns: 1,
+      format: 'YYYY-MM-DD',
+      autoApply: true,
+      lang: 'id-ID',
+      allowRepick: true,
+      resetButton: true,
+      maxDate: '{{ now()->format('Y-m-d') }}'
+    });
+  }
 
   if (document.getElementById('tabelLaporan')) {
     $('#tabelLaporan').DataTable({

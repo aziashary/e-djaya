@@ -8,34 +8,41 @@
     <div class="page-heading">
       <p class="page-kicker">Riwayat kasir</p>
       <h1 id="history-title" class="page-title">Transaksi sebelumnya</h1>
-      <p class="page-description">Periksa transaksi berdasarkan rentang tanggal, lalu buka detail struk jika diperlukan.</p>
-    </div>
+      <p class="page-description">Daftar transaksi terbaru diurutkan dari yang paling baru. Gunakan filter tanggal jika ingin melihat transaksi pada tanggal tertentu.</p>
   </header>
 
   <form class="card card-body mb-3" method="GET" action="{{ route('pos.riwayat') }}">
     <div class="row g-3 align-items-end">
-      <div class="col-md-8">
-        <label for="date-range" class="form-label">Rentang tanggal</label>
-        <input type="text" id="date-range" class="form-control" value="{{ $start }} sampai {{ $end }}" readonly>
-        <input type="hidden" name="start_date" value="{{ $start }}">
-        <input type="hidden" name="end_date" value="{{ $end }}">
+      <div class="col-md-8 col-lg-6">
+        <label for="tanggal" class="form-label">Filter tanggal transaksi</label>
+        <input type="text" id="tanggal" name="tanggal" class="form-control" placeholder="Pilih tanggal (kosongkan untuk semua transaksi)" value="{{ $tanggal ?? '' }}" readonly>
       </div>
-      <div class="col-md-4 d-grid">
-        <button class="btn btn-primary" type="submit">Terapkan tanggal</button>
+      <div class="col-md-4 col-lg-6 d-flex flex-wrap gap-2">
+        <button class="btn btn-primary" type="submit">Filter tanggal</button>
+        @if(!empty($tanggal))
+          <a href="{{ route('pos.riwayat') }}" class="btn btn-outline-secondary">Tampilkan semua</a>
+        @endif
       </div>
     </div>
   </form>
-
   <div class="card task-panel">
     <div class="card-header">
       <h2 class="h5 fw-bold mb-1">Daftar transaksi</h2>
-      <p class="text-muted small mb-0">Periode {{ \Carbon\Carbon::parse($start)->translatedFormat('d M Y') }} sampai {{ \Carbon\Carbon::parse($end)->translatedFormat('d M Y') }}.</p>
+      @if(!empty($tanggal))
+        <p class="text-muted small mb-0">Transaksi pada tanggal {{ \Carbon\Carbon::parse($tanggal)->translatedFormat('d F Y') }}.</p>
+      @else
+        <p class="text-muted small mb-0">Semua transaksi terbaru.</p>
+      @endif
     </div>
 
     @if($transaksi->isEmpty())
       <div class="empty-state" role="status">
-        <strong>Tidak ada transaksi pada periode ini</strong>
-        Ubah rentang tanggal atau mulai transaksi baru dari halaman POS.
+        <strong>Tidak ada transaksi ditemukan</strong>
+        @if(!empty($tanggal))
+          Tidak ada transaksi pada tanggal {{ \Carbon\Carbon::parse($tanggal)->translatedFormat('d F Y') }}. Ubah tanggal atau tampilkan semua transaksi.
+        @else
+          Mulai transaksi baru dari halaman POS untuk mencatat penjualan.
+        @endif
       </div>
     @else
       <div class="table-responsive" tabindex="0" aria-label="Tabel riwayat transaksi, geser jika diperlukan">
@@ -100,26 +107,19 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-  const dateRange = document.getElementById('date-range');
-  if (dateRange) {
-    const picker = new Litepicker({
-      element: dateRange,
-      singleMode: false,
-      numberOfMonths: window.innerWidth < 768 ? 1 : 2,
-      numberOfColumns: window.innerWidth < 768 ? 1 : 2,
+  const tanggalInput = document.getElementById('tanggal');
+  if (tanggalInput) {
+    new Litepicker({
+      element: tanggalInput,
+      singleMode: true,
+      numberOfMonths: 1,
+      numberOfColumns: 1,
       format: 'YYYY-MM-DD',
-      startDate: '{{ $start }}',
-      endDate: '{{ $end }}',
       autoApply: true,
       lang: 'id-ID',
-      minDate: '{{ now()->subMonths(2)->format('Y-m-d') }}',
+      allowRepick: true,
+      resetButton: true,
       maxDate: '{{ now()->format('Y-m-d') }}'
-    });
-
-    picker.on('selected', (startDate, endDate) => {
-      document.querySelector('[name="start_date"]').value = startDate.format('YYYY-MM-DD');
-      document.querySelector('[name="end_date"]').value = endDate.format('YYYY-MM-DD');
-      dateRange.value = `${startDate.format('YYYY-MM-DD')} sampai ${endDate.format('YYYY-MM-DD')}`;
     });
   }
 
