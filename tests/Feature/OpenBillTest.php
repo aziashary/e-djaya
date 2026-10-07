@@ -203,6 +203,11 @@ class OpenBillTest extends TestCase
             ->assertSee($todayTransaction->kode_transaksi)
             ->assertSee($olderTransaction->kode_transaksi);
 
+        $this->get(route('laporan.transaksi'))
+            ->assertOk()
+            ->assertSee('data-order="' . $todayTransaction->tanggal->getTimestamp() . '"', false)
+            ->assertSee('data-order="' . $olderTransaction->tanggal->getTimestamp() . '"', false);
+
         $this->get(route('laporan.transaksi', ['tanggal' => now()->subDays(40)->toDateString()]))
             ->assertOk()
             ->assertSee($olderTransaction->kode_transaksi)

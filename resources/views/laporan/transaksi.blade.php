@@ -74,7 +74,7 @@
             @foreach($laporan as $item)
               @php $cashierLevel = strtolower((string) ($item->kasir->level ?? '')); @endphp
               <tr>
-                <td>{{ $item->tanggal->format('d/m/Y H:i') }}</td>
+                <td data-order="{{ $item->tanggal->getTimestamp() }}">{{ $item->tanggal->format('d/m/Y H:i') }}</td>
                 <td><span class="transaction-code">{{ $item->kode_transaksi }}</span></td>
                 <td class="text-end fw-bold">Rp {{ number_format($item->total, 0, ',', '.') }}</td>
                 <td>
