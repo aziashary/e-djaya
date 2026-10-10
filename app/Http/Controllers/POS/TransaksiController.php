@@ -165,7 +165,7 @@ class TransaksiController extends Controller
             $query->whereBetween('tanggal', [$start->copy()->startOfDay(), $end->copy()->endOfDay()]);
         }
 
-        $transaksi = $query->get();
+        $transaksi = $query->paginate(10)->withQueryString();
 
         return view('pos.riwayat', [
             'transaksi' => $transaksi,

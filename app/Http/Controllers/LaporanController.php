@@ -131,17 +131,12 @@ class LaporanController extends Controller
             });
         }
 
-        $laporan = $query->get();
-
-        $totalTransaksi = $laporan->count();
-        $totalNilai = $laporan->sum('total');
-
-        // 🔥 Tambahan: total uang per metode pembayaran
-        $totalCash = $laporan->where('metode_pembayaran', 'cash')->sum('total');
-        $totalQris = $laporan->where('metode_pembayaran', 'qris')->sum('total');
+        $totalNilai = (clone $query)->sum('total');
+        $laporan = $query->paginate(10)->withQueryString();
+        $totalTransaksi = $laporan->total();
 
         return view('laporan.transaksi', compact(
-            'laporan', 'tanggal', 'totalTransaksi', 'totalNilai', 'totalCash', 'totalQris'
+            'laporan', 'tanggal', 'totalTransaksi', 'totalNilai'
         ));
     }
 

@@ -672,6 +672,39 @@ label:not(.form-check-label) {
   background: var(--ed-red-50);
 }
 
+.history-pagination {
+  display: flex;
+  justify-content: flex-end;
+  padding: 1rem;
+  border-top: 1px solid var(--ed-border);
+}
+
+.history-pagination .pagination {
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.history-pagination .page-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  border-radius: var(--ed-radius-control);
+  color: var(--ed-red-700);
+}
+
+.history-pagination .page-current {
+  padding: 0.5rem;
+  color: var(--ed-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.history-pagination .page-link.disabled {
+  color: var(--ed-muted);
+  background: var(--ed-canvas);
+}
+
 .table code,
 .transaction-code {
   color: var(--ed-ink);
@@ -1575,6 +1608,55 @@ label:not(.form-check-label) {
   .dataTables_wrapper .dataTables_filter input {
     width: 100%;
     margin: 0.4rem 0 0 !important;
+  }
+
+  .history-table,
+  .history-table tbody,
+  .history-table tr,
+  .history-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .history-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+
+  .history-table tr {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--ed-border);
+  }
+
+  .history-table td {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.4rem 0.85rem;
+    border: 0;
+    text-align: right !important;
+    overflow-wrap: anywhere;
+  }
+
+  .history-table td::before {
+    content: attr(data-label);
+    flex: 0 0 6.5rem;
+    color: var(--ed-muted);
+    font-weight: 600;
+    text-align: left;
+  }
+
+  .history-table td > .d-inline-flex {
+    min-width: 0;
+  }
+
+  .history-pagination {
+    justify-content: center;
   }
 
   .pos-wrapper {

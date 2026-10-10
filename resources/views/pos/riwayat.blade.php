@@ -28,6 +28,7 @@
   <div class="card task-panel">
     <div class="card-header">
       <h2 class="h5 fw-bold mb-1">Daftar transaksi</h2>
+      <p class="text-muted small mb-0">Menampilkan {{ $transaksi->firstItem() ?? 0 }}–{{ $transaksi->lastItem() ?? 0 }} dari {{ number_format($transaksi->total(), 0, ',', '.') }} transaksi.</p>
       @if(!empty($tanggal))
         <p class="text-muted small mb-0">Transaksi pada tanggal {{ \Carbon\Carbon::parse($tanggal)->translatedFormat('d F Y') }}.</p>
       @else
@@ -37,8 +38,10 @@
 
     @if($transaksi->isEmpty())
       <div class="empty-state" role="status">
-        <strong>Tidak ada transaksi ditemukan</strong>
-        @if(!empty($tanggal))
+        <strong>{{ $transaksi->total() > 0 ? 'Halaman transaksi kosong' : 'Tidak ada transaksi ditemukan' }}</strong>
+        @if($transaksi->total() > 0)
+          <a href="{{ $transaksi->url(1) }}">Kembali ke halaman pertama</a> untuk melihat transaksi.
+        @elseif(!empty($tanggal))
           Tidak ada transaksi pada tanggal {{ \Carbon\Carbon::parse($tanggal)->translatedFormat('d F Y') }}. Ubah tanggal atau tampilkan semua transaksi.
         @else
           Mulai transaksi baru dari halaman POS untuk mencatat penjualan.
@@ -46,7 +49,7 @@
       </div>
     @else
       <div class="table-responsive" tabindex="0" aria-label="Tabel riwayat transaksi, geser jika diperlukan">
-        <table id="tableRiwayat" class="table align-middle w-100">
+        <table class="table history-table align-middle w-100">
           <thead>
             <tr>
               <th scope="col">Tanggal</th>
@@ -60,12 +63,12 @@
           <tbody>
             @foreach($transaksi as $t)
               <tr>
-                <td>{{ $t->tanggal->format('d/m/Y H:i') }}</td>
-                <td><span class="transaction-code">{{ $t->kode_transaksi }}</span></td>
-                <td>{{ $t->kasir->name ?? 'Tidak tersedia' }}</td>
-                <td class="text-end fw-bold">Rp {{ number_format($t->total, 0, ',', '.') }}</td>
-                <td><span class="badge {{ $t->metode_pembayaran === 'cash' ? 'bg-warning' : 'bg-label-primary' }}">{{ $t->metode_pembayaran === 'cash' ? 'Tunai' : 'QRIS' }}</span></td>
-                <td class="text-center">
+                <td data-label="Tanggal">{{ $t->tanggal->format('d/m/Y H:i') }}</td>
+                <td data-label="Kode"><span class="transaction-code">{{ $t->kode_transaksi }}</span></td>
+                <td data-label="Kasir">{{ $t->kasir->name ?? 'Tidak tersedia' }}</td>
+                <td data-label="Total" class="text-end fw-bold">Rp {{ number_format($t->total, 0, ',', '.') }}</td>
+                <td data-label="Metode"><span class="badge {{ $t->metode_pembayaran === 'cash' ? 'bg-warning' : 'bg-label-primary' }}">{{ $t->metode_pembayaran === 'cash' ? 'Tunai' : 'QRIS' }}</span></td>
+                <td data-label="Aksi" class="text-center">
                   <button type="button" class="btn btn-sm btn-outline-primary btn-detail" data-kode="{{ $t->kode_transaksi }}" aria-label="Buka detail transaksi {{ $t->kode_transaksi }}">
                     <i class="bx bx-detail" aria-hidden="true"></i>
                     <span class="visually-hidden">Detail</span>
@@ -76,6 +79,7 @@
           </tbody>
         </table>
       </div>
+      @include('components.history-pagination', ['paginator' => $transaksi])
     @endif
   </div>
 </section>
@@ -123,20 +127,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  if (document.getElementById('tableRiwayat')) {
-    $('#tableRiwayat').DataTable({
-      pageLength: 10,
-      order: [[0, 'desc']],
-      info: false,
-      language: {
-        search: 'Cari transaksi:',
-        lengthMenu: 'Tampilkan _MENU_ data',
-        paginate: { previous: 'Sebelumnya', next: 'Berikutnya' },
-        zeroRecords: 'Transaksi tidak ditemukan'
-      },
-      columnDefs: [{ orderable: false, targets: [5] }]
-    });
-  }
 
   const formatRupiah = (val) => 'Rp ' + Number(val || 0).toLocaleString('id-ID');
 

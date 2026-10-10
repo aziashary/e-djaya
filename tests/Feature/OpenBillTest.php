@@ -205,13 +205,60 @@ class OpenBillTest extends TestCase
 
         $this->get(route('laporan.transaksi'))
             ->assertOk()
-            ->assertSee('data-order="' . $todayTransaction->tanggal->getTimestamp() . '"', false)
-            ->assertSee('data-order="' . $olderTransaction->tanggal->getTimestamp() . '"', false);
+            ->assertViewHas('laporan', fn ($rows) => $rows->pluck('id')->all() === [$todayTransaction->id, $olderTransaction->id]);
 
         $this->get(route('laporan.transaksi', ['tanggal' => now()->subDays(40)->toDateString()]))
             ->assertOk()
             ->assertSee($olderTransaction->kode_transaksi)
             ->assertDontSee($todayTransaction->kode_transaksi);
+    }
+
+    public function test_transaction_history_paginates_filtered_results_without_leaking_other_outlets(): void
+    {
+        $cashier = User::factory()->create(['level' => 'kasir']);
+        $staff = User::factory()->create(['level' => 'staff']);
+        $product = $this->createProduct();
+        $date = now()->toDateString();
+
+        for ($i = 0; $i < 11; $i++) {
+            $transaction = $this->createTransaction($cashier, $product, Transaksi::STATUS_COMPLETED, 10000 + $i);
+            $transaction->update(['tanggal' => now()->subMinutes($i)]);
+        }
+        $lastTransaction = $transaction;
+
+        $otherOutlet = $this->createTransaction($staff, $product, Transaksi::STATUS_COMPLETED, 90000);
+        $old = $this->createTransaction($cashier, $product, Transaksi::STATUS_COMPLETED, 50000);
+        $old->update(['tanggal' => now()->subDays(2)]);
+
+        $this->actingAs($cashier)
+            ->get(route('pos.riwayat', ['tanggal' => $date]))
+            ->assertOk()
+            ->assertViewHas('transaksi', fn ($rows) => $rows->count() === 10 && $rows->total() === 11)
+            ->assertSee('page=2')
+            ->assertSee('tanggal=' . $date)
+            ->assertDontSee($otherOutlet->kode_transaksi)
+            ->assertDontSee($old->kode_transaksi);
+
+        $this->get(route('pos.riwayat', ['tanggal' => $date, 'page' => 2]))
+            ->assertOk()
+            ->assertViewHas('transaksi', fn ($rows) => $rows->count() === 1 && $rows->total() === 11)
+            ->assertSee($lastTransaction->kode_transaksi)
+            ->assertDontSee($otherOutlet->kode_transaksi);
+
+        $this->get(route('laporan.transaksi', ['tanggal' => $date, 'search' => $cashier->name]))
+            ->assertOk()
+            ->assertViewHas('laporan', fn ($rows) => $rows->count() === 10 && $rows->total() === 11)
+            ->assertViewHas('totalTransaksi', 11)
+            ->assertViewHas('totalNilai', fn ($value) => (float) $value === 110055.0)
+            ->assertSee('page=2')
+            ->assertSee('search=' . rawurlencode($cashier->name))
+            ->assertDontSee($otherOutlet->kode_transaksi);
+
+        $this->get(route('laporan.transaksi', ['tanggal' => $date, 'search' => $cashier->name, 'page' => 2]))
+            ->assertOk()
+            ->assertViewHas('laporan', fn ($rows) => $rows->count() === 1 && $rows->total() === 11)
+            ->assertViewHas('totalTransaksi', 11)
+            ->assertViewHas('totalNilai', fn ($value) => (float) $value === 110055.0);
     }
 
     private function payload(Barang $product, int $quantity = 1, string $customer = 'Meja 4'): array

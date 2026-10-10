@@ -17,6 +17,8 @@
 - **👥 Manajemen Pengguna (Users)**: Kelola data staf/kasir yang memiliki akses ke dalam sistem.
 - **🔒 Autentikasi & Keamanan**: Login, Register, dan manajemen profil dengan aman (menggunakan Laravel Breeze).
 
+Riwayat transaksi pada POS dan laporan dashboard menampilkan 10 transaksi per halaman, diurutkan terbaru lebih dulu. Filter tanggal dan pencarian laporan tetap berlaku saat berpindah halaman; jumlah transaksi yang ditampilkan merujuk seluruh hasil filter, bukan hanya halaman aktif.
+
 ### Alur open bill
 
 1. Tambahkan produk di halaman POS, lalu pilih **Lanjut ke pembayaran**.

@@ -45,14 +45,16 @@
     <div class="card-header">
       <h2 class="h5 fw-bold mb-1">Daftar transaksi</h2>
       <p class="small text-muted mb-0">
-        {{ number_format($laporan->count(), 0, ',', '.') }} transaksi {{ !empty($tanggal) ? 'pada tanggal ' . \Carbon\Carbon::parse($tanggal)->translatedFormat('d F Y') : 'terbaru' }}.
+        Menampilkan {{ $laporan->firstItem() ?? 0 }}–{{ $laporan->lastItem() ?? 0 }} dari {{ number_format($laporan->total(), 0, ',', '.') }} transaksi {{ !empty($tanggal) ? 'pada tanggal ' . \Carbon\Carbon::parse($tanggal)->translatedFormat('d F Y') : 'terbaru' }}.
       </p>
     </div>
 
     @if($laporan->isEmpty())
       <div class="empty-state" role="status">
-        <strong>Transaksi tidak ditemukan</strong>
-        @if(!empty($tanggal) || request('search'))
+        <strong>{{ $laporan->total() > 0 ? 'Halaman transaksi kosong' : 'Transaksi tidak ditemukan' }}</strong>
+        @if($laporan->total() > 0)
+          <a href="{{ $laporan->url(1) }}">Kembali ke halaman pertama</a> untuk melihat transaksi.
+        @elseif(!empty($tanggal) || request('search'))
           Ubah filter tanggal atau kata pencarian untuk melihat hasil lain.
         @else
           Belum ada transaksi yang tercatat di sistem.
@@ -60,7 +62,7 @@
       </div>
     @else
       <div class="table-responsive" tabindex="0" aria-label="Tabel riwayat transaksi, geser jika diperlukan">
-        <table id="tabelLaporan" class="table align-middle w-100">
+        <table class="table history-table align-middle w-100">
           <thead>
             <tr>
               <th scope="col">Tanggal</th>
@@ -74,19 +76,19 @@
             @foreach($laporan as $item)
               @php $cashierLevel = strtolower((string) ($item->kasir->level ?? '')); @endphp
               <tr>
-                <td data-order="{{ $item->tanggal->getTimestamp() }}">{{ $item->tanggal->format('d/m/Y H:i') }}</td>
-                <td><span class="transaction-code">{{ $item->kode_transaksi }}</span></td>
-                <td class="text-end fw-bold">Rp {{ number_format($item->total, 0, ',', '.') }}</td>
-                <td>
+                <td data-label="Tanggal">{{ $item->tanggal->format('d/m/Y H:i') }}</td>
+                <td data-label="Kode"><span class="transaction-code">{{ $item->kode_transaksi }}</span></td>
+                <td data-label="Total" class="text-end fw-bold">Rp {{ number_format($item->total, 0, ',', '.') }}</td>
+                <td data-label="Kasir dan toko">
                   <span class="d-block">{{ $item->kasir->username ?? 'Tidak tersedia' }}</span>
                   @if($item->kasir)
                     <span class="badge {{ $cashierLevel === 'staff' ? 'bg-success' : 'bg-label-primary' }}">{{ $cashierLevel === 'staff' ? 'Ranu' : 'Warkop' }}</span>
                   @endif
                 </td>
-                <td class="text-end">
+                <td data-label="Aksi" class="text-end">
                   <div class="d-inline-flex flex-wrap justify-content-end gap-2">
                     <button type="button" class="btn btn-sm btn-outline-primary btn-detail" data-kode="{{ $item->kode_transaksi }}" aria-label="Buka detail transaksi {{ $item->kode_transaksi }}">Detail</button>
-                    <form action="{{ route('pos.destroy', $item->id) }}" method="POST" onsubmit="return confirm('Hapus transaksi ini?')">
+                    <form action="{{ route('pos.destroy', $item->id) }}" method="POST" data-no-loading="true" onsubmit="return confirm('Hapus transaksi ini?')">
                       @csrf
                       @method('DELETE')
                       <button type="submit" class="btn btn-sm btn-outline-danger">Hapus</button>
@@ -98,6 +100,7 @@
           </tbody>
         </table>
       </div>
+      @include('components.history-pagination', ['paginator' => $laporan])
     @endif
   </div>
 </section>
@@ -145,20 +148,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  if (document.getElementById('tabelLaporan')) {
-    $('#tabelLaporan').DataTable({
-      pageLength: 10,
-      order: [[0, 'desc']],
-      language: {
-        search: 'Cari pada tabel:',
-        lengthMenu: 'Tampilkan _MENU_ data',
-        info: 'Menampilkan _START_ sampai _END_ dari _TOTAL_ data',
-        paginate: { previous: 'Sebelumnya', next: 'Berikutnya' },
-        zeroRecords: 'Transaksi tidak ditemukan'
-      },
-      columnDefs: [{ orderable: false, targets: [4] }]
-    });
-  }
 
   const formatRupiah = (val) => 'Rp ' + Number(val || 0).toLocaleString('id-ID');
 
